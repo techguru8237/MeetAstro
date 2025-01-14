@@ -1,86 +1,209 @@
 import express from "express";
-import bodyParser from "body-parser";
-import cookieParser from "cookie-parser";
-import cors from "cors";
-import dotenv from "dotenv";
-dotenv.config();
-import swaggerUi from "swagger-ui-express";
-import swaggerJsDoc from "swagger-jsdoc";
+import validate from "../middleware/validate.js";
+import { check } from "express-validator";
+import {
+  Register,
+  Login,
+  GoogleAuth,
+  ForgotPassword,
+  ResetPassword,
+} from "../controllers/auth.js";
 
-import authRoute from "./routes/auth.js";
-import connectDB from "./config/db.js";
+const router = express.Router();
 
-// Database connection
-connectDB();
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication routes
+ */
 
-const app = express();
-const port = process.env.PORT || 3000;
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *       400:
+ *         description: User already exists
+ *       500:
+ *         description: Internal Server Error
+ */
 
-// Swagger setup
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: "3.0.0",
-    info: {
-      title: "My API",
-      version: "1.0.0",
-      description: "API documentation",
-    },
-    servers: [
-      {
-        url: `http://localhost:${port}`,
-      },
-    ],
-  },
-  apis: ["./routes/*.js"], // Path to your API docs
-};
+// Register route -- POST request
+router.post(
+  "/register",
+  check("email")
+    .isEmail()
+    .withMessage("Enter a valid email address")
+    .normalizeEmail(),
+  check("password")
+    .notEmpty()
+    .isLength({ min: 8 })
+    .withMessage("Must be at least 8 chars long"),
+  validate,
+  Register
+);
 
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Login a user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: User logged in successfully
+ *       401:
+ *         description: Invalid email or password
+ *       500:
+ *         description: Internal Server Error
+ */
 
-// Middleware
-app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+router.post(
+  "/login",
+  check("email")
+    .isEmail()
+    .withMessage("Enter a valid email address")
+    .normalizeEmail(),
+  check("password").not().isEmpty(),
+  validate,
+  Login
+);
 
-// CORS configuration
-const corsOptions = {
-  origin: "http://localhost:5173", // Allow this origin
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-};
-app.use(cors(corsOptions));
+/**
+ * @swagger
+ * /api/auth/google:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Authenticate user via Google OAuth
+ *     parameters:
+ *       - name: access_token
+ *         in: query
+ *         required: true
+ *         description: The access token obtained from Google OAuth.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Successful authentication
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 token:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         image:
+ *                           type: string
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get("/google", GoogleAuth);
 
-app.use("/api/auth", authRoute);
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Send password reset link to user's email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: The email address of the user requesting a password reset.
+ *     responses:
+ *       200:
+ *         description: Password reset link sent
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post("/forgot-password", ForgotPassword);
 
-// Health check route
-app.get("/api/health", (req, res) => {
-  res.status(200).json("Server is running correctly!");
-});
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Reset user's password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The password reset token received in the email.
+ *               password:
+ *                 type: string
+ *                 description: The new password for the user.
+ *     responses:
+ *       200:
+ *         description: Password has been reset
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Invalid or expired token
+ *       500:
+ *         description: Internal Server Error
+ */
+router.post("/reset-password", ResetPassword);
 
-// Serve static files from the uploads directory
-// app.use("/", express.static(path.join(__dirname, "uploads")));
-
-// Serve the index.html file for all other routes
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "dist", "index.html"));
-// });
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("Something broke!");
-});
-
-// Graceful shutdown
-process.on("SIGINT", () => {
-  console.log("Shutting down gracefully...");
-  mongoose.connection.close(() => {
-    console.log("MongoDB connection closed");
-    process.exit(0);
-  });
-});
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-export default app;
+export default router;
