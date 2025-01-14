@@ -9,7 +9,6 @@ import swaggerJsDoc from "swagger-jsdoc";
 
 import authRoute from "./routes/auth.js";
 import connectDB from "./config/db.js";
-import swaggerDocument from './swagger/swagger.js'
 
 // Database connection
 connectDB();
@@ -20,7 +19,6 @@ const port = process.env.PORT || 3000;
 // Swagger setup
 const swaggerOptions = {
   swaggerDefinition: {
-    swaggerDefinition: swaggerDocument,
     openapi: "3.0.0",
     info: {
       title: "My API",
