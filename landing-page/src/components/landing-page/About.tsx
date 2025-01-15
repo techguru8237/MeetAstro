@@ -21,13 +21,13 @@ import React from "react";
 export default function Astro() {
    return (
       <section id="About">
-         <div className="bg-[url('/assets/about.jpg')] bg-no-repeat bg-cover bg-center h-screen w-full flex flex-col justify-between items-center lg:p-24 px-12 py-24 font-[family-name:var(--font-geist-mono)]"
+         <div className="bg-[url('/assets/about.jpg')] bg-no-repeat bg-cover bg-center h-screen w-full flex flex-col justify-between items-center lg:pt-24 lg:pb-12 px-12 pb-20 pt-24 font-[family-name:var(--font-geist-mono)]"
          >
             <div className="flex lg:text-8xl md:text-6xl text-4xl font-bold">
                Meet Astro
             </div>
-            <div className="w-full flex flex-row justify-between items-center">
-               <div className="md:w-1/3 hidden md:flex justify-center items-center h-full">
+            <div className="w-full h-2/3 flex flex-row justify-between items-center">
+               {/* <div className="flex w-full justify-center items-center h-full"> */}
                   <div className="relative w-full h-full">
                      <Image
                         src={`/assets/astro_about.png`}
@@ -36,16 +36,16 @@ export default function Astro() {
                         objectFit="contain"
                         className="relative"
                      />
+                     {/* <Canvas>
+                        <ambientLight intensity={3} />
+                        <pointLight position={[10, 10, 10]} intensity={1} />
+                        <directionalLight position={[-5, 5, 5]} intensity={0.5} />
+                        <spotLight position={[15, 20, 5]} angle={0.3} intensity={0.8} />
+                        <Model />
+                     </Canvas> */}
                   </div>
-                  {/* <Canvas>
-                     <ambientLight intensity={3} />
-                     <pointLight position={[10, 10, 10]} intensity={1} />
-                     <directionalLight position={[-5, 5, 5]} intensity={0.5} />
-                     <spotLight position={[15, 20, 5]} angle={0.3} intensity={0.8} />
-                     <Model />
-                  </Canvas> */}
-               </div>
-               <div className="md:w-2/3 w-full flex flex-col justify-between items-center">
+               {/* </div> */}
+               {/* <div className="md:w-2/3 w-full flex flex-col justify-between items-center">
                   <div className="relative flex w-full">
                      <Image
                         src={`/assets/dialog.png`}
@@ -61,7 +61,7 @@ export default function Astro() {
                         MeetAstro.ai is a combination of AI, gaming, entertainment, and decentralized finance (DeFi) all wrapped into one. We call it #DeFAi.
                      </div>
                   </div>
-               </div>
+               </div> */}
             </div>
             <Search />
          </div>
