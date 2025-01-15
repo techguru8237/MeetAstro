@@ -1,22 +1,48 @@
-// src/config/index.js
-import mongoose from "mongoose";
-import dotenv from "dotenv"
-dotenv.config();
+// config/db.js
+import pkg from "pg";
+const { Pool } = pkg;
 
-mongoose.Promise = global.Promise;
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // Set to true if you want to enforce SSL certificate validation
+  },
+});
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.DB_URI, {
-      directConnection: true,
-    });
-    console.log("MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection failed:", error);
-    process.exit(1);
+    await pool.connect();
+    console.log("Connected to NeonDB PostgreSQL database");
+  } catch (err) {
+    console.error("Database connection error:", err.stack);
   }
 };
 
-mongoose.set("debug", true);
+export default connectDB;
 
-export default connectDB
+
+
+
+
+
+// config/db.js
+// import { Pool } from 'pg';
+
+// const pool = new Pool({
+//   user: process.env.DB_USER,
+//   host: process.env.DB_HOST,
+//   database: process.env.DB_NAME,
+//   password: process.env.DB_PASSWORD,
+//   port: process.env.DB_PORT,
+// });
+
+// const connectDB = async () => {
+//   try {
+//     await pool.connect();
+//     console.log("Connected to PostgreSQL database");
+//   } catch (err) {
+//     console.error("Database connection error:", err.stack);
+//   }
+// };
+
+// export default connectDB;

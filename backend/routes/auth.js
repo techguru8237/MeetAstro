@@ -7,7 +7,7 @@ import {
   GoogleAuth,
   ForgotPassword,
   ResetPassword,
-} from "../controllers/auth.js";
+} from "../controllers/authController.js";
 
 const router = express.Router();
 
