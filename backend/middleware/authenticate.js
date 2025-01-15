@@ -1,30 +1,33 @@
-const User = require('../models/user');
-const Session = require('../models/session');
+// authMiddleware.js
+import jwt from "jsonwebtoken";
+import { promisify } from "util";
 
-const authenticate = async (req, res, next) => {
+const verifyToken = promisify(jwt.verify);
+
+export const authMiddleware = async (req, res, next) => {
   try {
-    const { token } = req.cookies;
-    if (typeof token !== 'string') {
-      throw new Error('Request cookie is invalid.');
+    // Get the token from the headers
+    const token = req.headers.authorization?.split(" ")[1]; // Bearer token
+
+    if (!token) {
+      return res.status(401).json({
+        status: "failed",
+        message: "Access denied. No token provided.",
+      });
     }
-    const session = await Session.findOne({ token, status: 'valid' });
-    if (!session) {
-      res.clearCookie('token');
-      throw new Error('Your session has expired. You need to log in.');
-    }
-    req.session = session;
+
+    // Verify the token
+    const decoded = await verifyToken(token, process.env.JWT_SECRET); // Ensure you have a JWT_SECRET in your .env file
+
+    // Attach user information to the request object
+    req.user = decoded;
+
+    // Call the next middleware or route handler
     next();
-  } catch (err) {
-    res.status(401).json({
-      errors: [
-        {
-          title: 'Unauthorized',
-          detail: 'Authentication credentials invalid',
-          errorMessage: err.message,
-        },
-      ],
+  } catch (error) {
+    return res.status(401).json({
+      status: "failed",
+      message: "Invalid token.",
     });
   }
 };
-
-module.exports = { authenticate };

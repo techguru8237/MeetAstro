@@ -1,14 +1,13 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import Blacklist from "../models/Blacklist.js";
 import User from "../models/User.js";
 import axios from "axios";
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
 import crypto from "crypto"; // Import crypto for generating tokens
+import dotenv from "dotenv";
 dotenv.config();
 
-import { pool } from "../config/db.js";
+import pool from "../config/db.js";
 const frontend_url = process.env.FRONTEND_URL;
 
 /**
@@ -104,6 +103,7 @@ export async function Register(req, res) {
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
+    console.log('existingUser :>> ', existingUser);
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
         status: "failed",
@@ -117,8 +117,6 @@ export async function Register(req, res) {
       "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
       [email, hashedPassword]
     );
-
-    console.log("newUser :>> ", newUser);
 
     const { password: _, ...user_data } = newUser.rows[0];
 
