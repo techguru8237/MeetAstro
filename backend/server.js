@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const axios = require("axios");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const morgan = require("morgan");
@@ -8,7 +9,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
-const { authMiddleware } = require("./middleware/authenticate");
+// const { authMiddleware } = require("./middleware/authenticate");
 const authRoute = require("./routes/auth");
 const queryRoute = require("./routes/query");
 
@@ -58,6 +59,20 @@ app.use(morgan("combined"));
 app.get("/api/health", (req, res) => {
   res.status(200).json("Server is running correctly!");
 });
+
+// Health check function
+const healthCheck = async () => {
+  try {
+    const response = await axios.get(`${base_url}/api/health`);
+    console.log(`Health check response: ${response.data}`);
+  } catch (error) {
+    console.error('Health check failed:', error.message);
+  }
+};
+
+// Set an interval to perform the health check every 3 minutes (180000 ms)
+setInterval(healthCheck, 180000);
+
 app.use("/api/auth", authRoute);
 app.use("/api/query", queryRoute);
 
