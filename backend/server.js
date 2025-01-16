@@ -30,7 +30,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `https://${base_url}`,
+        url: base_url,
       },
     ],
   },
