@@ -43,9 +43,10 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // CORS configuration
 const corsOptions = {
-  origin: '*', // Allow this origin
+  origin: "*", // Allow this origin
 };
-app.use(cors());
+
+app.use(cors(corsOptions));
 
 // Middleware
 app.use(bodyParser.json());
