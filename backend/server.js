@@ -43,7 +43,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // CORS configuration
 const corsOptions = {
-  origin: `https://${base_url}`, // Allow this origin
+  origin: base_url, // Allow this origin
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 };
 app.use(cors(corsOptions));
