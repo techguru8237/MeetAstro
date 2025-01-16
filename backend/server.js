@@ -15,6 +15,7 @@ const queryRoute = require("./routes/query");
 dotenv.config();
 
 const port = process.env.PORT || 3000;
+const base_url = process.env.BASE_URL;
 
 const app = express();
 
@@ -29,7 +30,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${port}`,
+        url: `https://${base_url}`,
       },
     ],
   },
@@ -41,7 +42,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:5173", // Allow this origin
+  origin: `https://${base_url}`, // Allow this origin
   credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 };
 app.use(cors(corsOptions));
