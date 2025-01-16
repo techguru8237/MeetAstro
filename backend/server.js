@@ -42,7 +42,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // CORS configuration
 const corsOptions = {
-  origin: '*', // Allow this origin
+  origin: 'http://localhost:3000', // Allow this origin
 };
 app.use(cors());
 
