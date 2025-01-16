@@ -44,7 +44,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // CORS configuration
 const corsOptions = {
   origin: '*', // Allow this origin
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
 };
 app.use(cors(corsOptions));
 
