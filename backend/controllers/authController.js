@@ -1,13 +1,14 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import Blacklist from "../models/Blacklist.js";
-import User from "../models/User.js";
-import axios from "axios";
-import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-import crypto from "crypto"; // Import crypto for generating tokens
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User.js");
+const axios = require("axios");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto"); // Import crypto for generating tokens
+const dotenv = require("dotenv");
+
 dotenv.config();
 
+const pool = require("../config/db.js");
 const frontend_url = process.env.FRONTEND_URL;
 
 /**
@@ -35,7 +36,7 @@ const transporter = nodemailer.createTransport({
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function GoogleAuth(req, res) {
+async function GoogleAuth(req, res) {
   try {
     const access_token = req.query.access_token;
 
@@ -95,23 +96,30 @@ export async function GoogleAuth(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function Register(req, res) {
-  const { email, password } = req.body; // Destructure email and password from request body
+async function Register(req, res) {
+  const { email, password } = req.body;
   try {
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    const existingUser = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+    console.log("existingUser :>> ", existingUser);
+    if (existingUser.rows.length > 0) {
       return res.status(400).json({
         status: "failed",
-        data: [],
         message: "It seems you already have an account, please log in instead.",
       });
     }
 
-    // Create and save new user
-    const newUser = new User({ email, password });
-    const savedUser = await newUser.save();
-    const { role, ...user_data } = savedUser._doc;
+    // Hash the password and create a new user
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await pool.query(
+      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+      [email, hashedPassword]
+    );
+
+    const { password: _, ...user_data } = newUser.rows[0];
 
     res.status(200).json({
       status: "success",
@@ -122,8 +130,6 @@ export async function Register(req, res) {
   } catch (err) {
     res.status(500).json({
       status: "error",
-      code: 500,
-      data: [],
       message: "Internal Server Error",
     });
   }
@@ -134,34 +140,35 @@ export async function Register(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function Login(req, res) {
-  const { email, password } = req.body; // Destructure email and password from request body
+async function Login(req, res) {
+  const { email, password } = req.body;
+
   try {
-    // Check if user exists
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
+    const user = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+    if (user.rows.length === 0) {
       return res.status(401).json({
         status: "failed",
-        data: [],
         message:
           "Invalid email or password. Please try again with the correct credentials.",
       });
     }
 
-    // Validate password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.rows[0].password
+    );
     if (!isPasswordValid) {
       return res.status(401).json({
         status: "failed",
-        data: [],
         message:
           "Invalid email or password. Please try again with the correct credentials.",
       });
     }
 
-    // Sign a token for the user
-    const token = signToken(user._id);
-    const { password: _, ...user_data } = user._doc;
+    const token = signToken(user.rows[0].id);
+    const { password: _, ...user_data } = user.rows[0];
 
     res.status(200).json({
       status: "success",
@@ -172,8 +179,6 @@ export async function Login(req, res) {
   } catch (err) {
     res.status(500).json({
       status: "error",
-      code: 500,
-      data: [],
       message: "Internal Server Error",
     });
   }
@@ -184,23 +189,19 @@ export async function Login(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function Logout(req, res) {
+async function Logout(req, res) {
   try {
-    const authHeader = req.headers["cookie"]; // Get the session cookie from request header
-    if (!authHeader) return res.sendStatus(204); // No content
+    const authHeader = req.headers["cookie"];
+    if (!authHeader) return res.sendStatus(204);
 
-    const cookie = authHeader.split("=")[1]; // Extract the JWT token from cookie
+    const cookie = authHeader.split("=")[1];
     const accessToken = cookie.split(";")[0];
 
-    // Check if the token is already blacklisted
-    const checkIfBlacklisted = await Blacklist.findOne({ token: accessToken });
-    if (checkIfBlacklisted) return res.sendStatus(204); // No content
-
     // Blacklist the token
-    const newBlacklist = new Blacklist({ token: accessToken });
-    await newBlacklist.save();
+    await pool.query("INSERT INTO blacklist (token) VALUES ($1)", [
+      accessToken,
+    ]);
 
-    // Clear request cookie on client
     res.setHeader("Clear-Site-Data", '"cookies"');
     res.status(200).json({ message: "You are logged out!" });
   } catch (err) {
@@ -216,18 +217,30 @@ export async function Logout(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function ForgotPassword(req, res) {
+async function ForgotPassword(req, res) {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
 
-    if (!user) return res.status(404).send("User not found");
+    // Query to find the user by email
+    const userResult = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+    const user = userResult.rows[0]; // Access the first row
+
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
 
     // Generate a password reset token
     const token = crypto.randomBytes(20).toString("hex");
-    user.resetPasswordToken = token;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-    await user.save();
+    const resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+    // Update the user with the reset token and expiration
+    await pool.query(
+      "UPDATE users SET reset_password_token = $1, reset_password_expires = $2 WHERE id = $3",
+      [token, resetPasswordExpires, user.id]
+    );
 
     // Send email with the reset link
     const resetUrl = `http://${frontend_url}/auth/reset-password/${token}`;
@@ -245,33 +258,41 @@ export async function ForgotPassword(req, res) {
   }
 }
 
-
 /**
  * Resets the user's password.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function ResetPassword(req, res) {
+async function ResetPassword(req, res) {
   try {
     const { token, password } = req.body;
 
-    // Find user by reset token and check if it hasn't expired
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
+    const user = await pool.query(
+      "SELECT * FROM users WHERE reset_password_token = $1 AND reset_password_expires > NOW()",
+      [token]
+    );
 
-    if (!user) return res.status(400).send("Invalid or expired token");
+    if (user.rows.length === 0)
+      return res.status(400).send("Invalid or expired token");
 
-    // Update the user's password (ensure to hash it)
-    user.password = await bcrypt.hash(password, 10); // Hash the new password
-    user.resetPasswordToken = undefined; // Clear the reset token
-    user.resetPasswordExpires = undefined; // Clear the expiration
-    await user.save();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await pool.query(
+      "UPDATE users SET password = $1, reset_password_token = NULL, reset_password_expires = NULL WHERE id = $2",
+      [hashedPassword, user.rows[0].id]
+    );
 
     res.send("Password has been reset");
   } catch (error) {
-    console.log("error :>> ", error);
     res.status(500).send("Internal Server Error");
   }
 }
+
+// Exporting the functions for use in other modules
+module.exports = {
+  GoogleAuth,
+  Register,
+  Login,
+  Logout,
+  ForgotPassword,
+  ResetPassword,
+};

@@ -1,22 +1,18 @@
-// src/config/index.js
-import mongoose from "mongoose";
-import dotenv from "dotenv"
+const dotenv = require("dotenv");
+const { Pool } = require("pg");
+
 dotenv.config();
 
-mongoose.Promise = global.Promise;
+// Create a connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection could not be established
+  maxUses: 7500, // Close a connection after it has been used 7500 times
+});
 
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.DB_URI, {
-      directConnection: true,
-    });
-    console.log("MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection failed:", error);
-    process.exit(1);
-  }
-};
-
-mongoose.set("debug", true);
-
-export default connectDB
+module.exports = pool;

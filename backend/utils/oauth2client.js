@@ -1,5 +1,5 @@
-import { google } from "googleapis";
-import dotenv from "dotenv";
+const { google } = require("googleapis");
+const dotenv = require("dotenv");
 dotenv.config();
 
 /**
@@ -10,7 +10,11 @@ dotenv.config();
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
-console.log('GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET  :>> ', GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET );
+console.log(
+  "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET  :>> ",
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET
+);
 
 const oauth2Client = new google.auth.OAuth2(
   GOOGLE_CLIENT_ID,
@@ -18,6 +22,6 @@ const oauth2Client = new google.auth.OAuth2(
   "postmessage"
 );
 
-console.log('oauth2Client :>> ', oauth2Client);
+console.log("oauth2Client :>> ", oauth2Client);
 
-export default oauth2Client
+module.exports = oauth2Client;
