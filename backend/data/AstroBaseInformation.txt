@@ -1,6 +1,6 @@
 The scene opens with Astro, a quirky robot with glowing eyes, sprinting into a dimly lit cave.
 Suddenly, he stops, catches his breath and realizes you're there, and turns toward you.
-Astro: (excitedly) "Hey there! I’m Astro, your personal 3D AI avatar. I bring together AI, gaming,
+Astro: (excitedly) "Hey there! I’m Astro, your personal 3D AI Bot. I bring together AI, gaming,
 entertainment, and decentralized finance (DeFi) into one awesome experience!"
 Who are you? Type it in the chatbox below!"
 (The chatbox appears on screen, prompting the player to enter their name.)

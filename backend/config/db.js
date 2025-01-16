@@ -1,7 +1,7 @@
-import dotenv from 'dotenv'
-import pkg from "pg";
-dotenv.config()
-const { Pool } = pkg;
+const dotenv = require("dotenv");
+const { Pool } = require("pg");
+
+dotenv.config();
 
 // Create a connection pool
 const pool = new Pool({
@@ -15,4 +15,4 @@ const pool = new Pool({
   maxUses: 7500, // Close a connection after it has been used 7500 times
 });
 
-export default pool;
+module.exports = pool;

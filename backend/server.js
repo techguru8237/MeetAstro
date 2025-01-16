@@ -1,19 +1,18 @@
-import express from "express";
-import bodyParser from "body-parser";
-import cookieParser from "cookie-parser";
-import cors from "cors";
-import morgan from "morgan";
-import helmet from "helmet";
-import path from "path";
-import { fileURLToPath } from "url";
-import dotenv from "dotenv";
-dotenv.config();
-import swaggerUi from "swagger-ui-express";
-import swaggerJsDoc from "swagger-jsdoc";
+const express = require("express");
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const morgan = require("morgan");
+const helmet = require("helmet");
+const path = require("path");
+const dotenv = require("dotenv");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
+const { authMiddleware } = require("./middleware/authenticate");
+const authRoute = require("./routes/auth");
+const queryRoute = require("./routes/query");
 
-import { authMiddleware } from "./middleware/authenticate.js";
-import authRoute from "./routes/auth.js";
-import queryRoute from "./routes/query.js";
+dotenv.config();
 
 const port = process.env.PORT || 3000;
 
@@ -63,8 +62,6 @@ app.use("/api/query", queryRoute);
 
 // Serve static files from the uploads directory
 // Get the current directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 app.use("/", express.static(path.join(__dirname, "public")));
 
@@ -92,4 +89,4 @@ app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
-export default app;
+module.exports = app;

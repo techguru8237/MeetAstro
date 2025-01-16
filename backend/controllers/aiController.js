@@ -1,16 +1,17 @@
-import OpenAI from "openai";
-import { ElevenLabsClient } from "elevenlabs";
-import fs, { createWriteStream } from "fs";
-import { fileURLToPath } from "url";
-import path from 'path'
-import dotenv from "dotenv";
+const OpenAI = require("openai");
+const { ElevenLabsClient } = require("elevenlabs");
+const fs = require("fs");
+const { createWriteStream } = require("fs");
+const { promisify } = require("util");
+const musicMetadata = require('music-metadata'); // Install this package
+const mp3Duration = require('mp3-duration'); // Alternatively, you can use this package
+const path = require("path");
+const dotenv = require("dotenv");
+
 dotenv.config();
 
 const base_url = process.env.BASE_URL;
 
-// Get the current directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const sourceFile = path.join(__dirname, "../data/AstroBaseInformation.txt");
 
 // Initialize OpenAI with your API key
@@ -19,7 +20,7 @@ const openai = new OpenAI({
 });
 
 // Define your Eleven Labs API endpoint and key
-const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY; // Set this in your .env file
+const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
 
 const client = new ElevenLabsClient({
   apiKey: ELEVEN_LABS_API_KEY,
@@ -42,25 +43,32 @@ const createAudioFileFromText = async (text) => {
   return new Promise(async (resolve, reject) => {
     try {
       const audio = await client.generate({
-        voice: "Rachel",
+        voice: "Liam",
         model_id: "eleven_turbo_v2_5",
         text,
       });
       const fileName = `public/Answer_${Date.now()}.mp3`; // Save to public folder
       const fileStream = createWriteStream(fileName);
-
       audio.pipe(fileStream);
-      fileStream.on("finish", () => resolve(fileName)); // Resolve with the fileName
-      fileStream.on("error", reject);
 
-      return fileName;
+      fileStream.on("finish", async () => {
+        try {
+          // Get the duration of the MP3 file
+          const duration = await promisify(mp3Duration)(fileName);
+          resolve({ fileName, duration }); // Resolve with an object containing fileName and duration
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      fileStream.on("error", reject);
     } catch (error) {
       reject(error);
     }
   });
 };
 
-export async function GenerateVoiceAnswer(req, res) {
+async function GenerateVoiceAnswer(req, res) {
   const customerQuery = req.body.query;
   try {
     const fileContent = await getFileContent(sourceFile);
@@ -69,20 +77,24 @@ export async function GenerateVoiceAnswer(req, res) {
       model: "gpt-3.5-turbo",
       messages: [
         { role: "system", content: fileContent },
-        { role: "system", content: "Answer the questions based on above content also" },
+        {
+          role: "system",
+          content: "Answer the questions based on above content also",
+        },
         { role: "user", content: customerQuery },
       ],
     });
 
     const botResponse = openAIResponse.choices[0].message.content;
 
-    const fileName = await createAudioFileFromText(botResponse);
-    console.log('fileName :>> ', fileName);
+    const { fileName, duration } = await createAudioFileFromText(botResponse);
+    console.log("fileName, duration :>> ", fileName, duration);
 
     // Step 3: Send the audio result back to the frontend
     res.json({
       botResponse,
       audioUrl: `${base_url}/${fileName.replace("public/", "")}`, // Adjust based on the actual response structure
+      audioDuration: duration,
     });
   } catch (error) {
     console.error("Error:", error);
@@ -91,3 +103,5 @@ export async function GenerateVoiceAnswer(req, res) {
       .json({ error: "An error occurred while processing the request." });
   }
 }
+
+module.exports = { GenerateVoiceAnswer };

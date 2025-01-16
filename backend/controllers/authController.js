@@ -1,13 +1,14 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-import axios from "axios";
-import nodemailer from "nodemailer";
-import crypto from "crypto"; // Import crypto for generating tokens
-import dotenv from "dotenv";
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User.js");
+const axios = require("axios");
+const nodemailer = require("nodemailer");
+const crypto = require("crypto"); // Import crypto for generating tokens
+const dotenv = require("dotenv");
+
 dotenv.config();
 
-import pool from "../config/db.js";
+const pool = require("../config/db.js");
 const frontend_url = process.env.FRONTEND_URL;
 
 /**
@@ -35,7 +36,7 @@ const transporter = nodemailer.createTransport({
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function GoogleAuth(req, res) {
+async function GoogleAuth(req, res) {
   try {
     const access_token = req.query.access_token;
 
@@ -95,7 +96,7 @@ export async function GoogleAuth(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function Register(req, res) {
+async function Register(req, res) {
   const { email, password } = req.body;
   try {
     // Check if user already exists
@@ -103,7 +104,7 @@ export async function Register(req, res) {
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
-    console.log('existingUser :>> ', existingUser);
+    console.log("existingUser :>> ", existingUser);
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
         status: "failed",
@@ -139,7 +140,7 @@ export async function Register(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function Login(req, res) {
+async function Login(req, res) {
   const { email, password } = req.body;
 
   try {
@@ -188,7 +189,7 @@ export async function Login(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function Logout(req, res) {
+async function Logout(req, res) {
   try {
     const authHeader = req.headers["cookie"];
     if (!authHeader) return res.sendStatus(204);
@@ -216,7 +217,7 @@ export async function Logout(req, res) {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function ForgotPassword(req, res) {
+async function ForgotPassword(req, res) {
   try {
     const { email } = req.body;
 
@@ -257,13 +258,12 @@ export async function ForgotPassword(req, res) {
   }
 }
 
-
 /**
  * Resets the user's password.
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-export async function ResetPassword(req, res) {
+async function ResetPassword(req, res) {
   try {
     const { token, password } = req.body;
 
@@ -286,3 +286,13 @@ export async function ResetPassword(req, res) {
     res.status(500).send("Internal Server Error");
   }
 }
+
+// Exporting the functions for use in other modules
+module.exports = {
+  GoogleAuth,
+  Register,
+  Login,
+  Logout,
+  ForgotPassword,
+  ResetPassword,
+};

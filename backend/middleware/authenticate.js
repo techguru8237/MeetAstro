@@ -1,10 +1,9 @@
-// authMiddleware.js
-import jwt from "jsonwebtoken";
-import { promisify } from "util";
+const jwt = require("jsonwebtoken");
+const { promisify } = require("util");
 
 const verifyToken = promisify(jwt.verify);
 
-export const authMiddleware = async (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     // Get the token from the headers
     const token = req.headers.authorization?.split(" ")[1]; // Bearer token
@@ -31,3 +30,5 @@ export const authMiddleware = async (req, res, next) => {
     });
   }
 };
+
+module.exports = { authMiddleware };

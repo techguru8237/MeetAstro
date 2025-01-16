@@ -1,13 +1,13 @@
-import express from "express";
-import validate from "../middleware/validate.js";
-import { check } from "express-validator";
-import {
+const express = require("express");
+const validate = require("../middleware/validate.js");
+const { check } = require("express-validator");
+const {
   Register,
   Login,
   GoogleAuth,
   ForgotPassword,
   ResetPassword,
-} from "../controllers/authController.js";
+} = require("../controllers/authController.js");
 
 const router = express.Router();
 
@@ -206,4 +206,4 @@ router.post("/forgot-password", ForgotPassword);
  */
 router.post("/reset-password", ResetPassword);
 
-export default router;
+module.exports = router;
