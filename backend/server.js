@@ -63,7 +63,7 @@ app.use("/api/query", queryRoute);
 // Serve static files from the uploads directory
 // Get the current directory name
 
-app.use("/", express.static(path.join(__dirname, "public")));
+app.use("/", express.static(path.join(__dirname, "uploads")));
 
 // Serve the index.html file for all other routes
 // app.get("*", (req, res) => {

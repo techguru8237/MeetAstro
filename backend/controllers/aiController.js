@@ -47,7 +47,7 @@ const createAudioFileFromText = async (text) => {
         model_id: "eleven_turbo_v2_5",
         text,
       });
-      const fileName = `public/Answer_${Date.now()}.mp3`; // Save to public folder
+      const fileName = `uploads/Answer_${Date.now()}.mp3`; // Save to public folder
       const fileStream = createWriteStream(fileName);
       audio.pipe(fileStream);
 
@@ -93,7 +93,7 @@ async function GenerateVoiceAnswer(req, res) {
     // Step 3: Send the audio result back to the frontend
     res.json({
       botResponse,
-      audioUrl: `${base_url}/${fileName.replace("public/", "")}`, // Adjust based on the actual response structure
+      audioUrl: `${base_url}/${fileName.replace("uploads/", "")}`, // Adjust based on the actual response structure
       audioDuration: duration,
     });
   } catch (error) {
