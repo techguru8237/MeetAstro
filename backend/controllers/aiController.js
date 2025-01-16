@@ -3,8 +3,8 @@ const { ElevenLabsClient } = require("elevenlabs");
 const fs = require("fs");
 const { createWriteStream } = require("fs");
 const { promisify } = require("util");
-const musicMetadata = require('music-metadata'); // Install this package
-const mp3Duration = require('mp3-duration'); // Alternatively, you can use this package
+const musicMetadata = require("music-metadata"); // Install this package
+const mp3Duration = require("mp3-duration"); // Alternatively, you can use this package
 const path = require("path");
 const dotenv = require("dotenv");
 
@@ -21,10 +21,9 @@ const openai = new OpenAI({
 
 // Define your Eleven Labs API endpoint and key
 const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
+const VOICE_ID = process.env.VOICE_ID;
 
-const client = new ElevenLabsClient({
-  apiKey: ELEVEN_LABS_API_KEY,
-});
+const client = new ElevenLabsClient({ apiKey: ELEVEN_LABS_API_KEY });
 
 // Function to read file content
 async function getFileContent(filePath) {
@@ -42,11 +41,13 @@ async function getFileContent(filePath) {
 const createAudioFileFromText = async (text) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const audio = await client.generate({
-        voice: "Liam",
-        model_id: "eleven_turbo_v2_5",
-        text,
+      const audio = await client.textToSpeech.convert(VOICE_ID, {
+        output_format: "mp3_44100_128",
+        text: text,
+        model_id: "eleven_multilingual_v2",
       });
+
+      console.log("audio :>> ", audio);
       const fileName = `uploads/Answer_${Date.now()}.mp3`; // Save to public folder
       const fileStream = createWriteStream(fileName);
       audio.pipe(fileStream);
@@ -86,6 +87,7 @@ async function GenerateVoiceAnswer(req, res) {
     });
 
     const botResponse = openAIResponse.choices[0].message.content;
+    console.log("botResponse :>> ", botResponse);
 
     const { fileName, duration } = await createAudioFileFromText(botResponse);
     console.log("fileName, duration :>> ", fileName, duration);
