@@ -19,7 +19,7 @@ const openai = new OpenAI({
 });
 
 // Define your Eleven Labs API endpoint and key
-const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY; // Set this in your .env file
+const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
 
 const client = new ElevenLabsClient({
   apiKey: ELEVEN_LABS_API_KEY,
