@@ -42,7 +42,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // CORS configuration
 const corsOptions = {
-  origin: 'http://localhost:3000', // Allow this origin
+  origin: '*', // Allow this origin
 };
 app.use(cors());
 
@@ -50,7 +50,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 app.use(morgan("combined"));
 
 // Health check route
