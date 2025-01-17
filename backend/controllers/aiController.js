@@ -26,7 +26,7 @@ const VOICE_ID = process.env.VOICE_ID;
 const client = new ElevenLabsClient({ apiKey: ELEVEN_LABS_API_KEY });
 
 // Function to read file content
-async function getFileContent(filePath) {
+const getFileContent = async (filePath) => {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, "utf8", (err, data) => {
       if (err) {
@@ -69,7 +69,7 @@ const createAudioFileFromText = async (text) => {
   });
 };
 
-async function GenerateVoiceAnswer(req, res) {
+const GenerateVoiceAnswer = async (req, res) => {
   // Check if req.body.query is not empty
   if (!req.body.query || req.body.query.trim() === "") {
     return res.status(400).json({ error: "Query cannot be empty." });

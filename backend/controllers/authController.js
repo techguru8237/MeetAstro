@@ -102,7 +102,7 @@ async function Register(req, res) {
       "SELECT * FROM users WHERE email = $1",
       [email]
     );
-    console.log("existingUser :>> ", existingUser);
+    
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
         status: "failed",

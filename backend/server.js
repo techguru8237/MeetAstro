@@ -11,8 +11,9 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const { authMiddleware } = require("./middleware/authenticate");
 const { errorHandler } = require("./middleware/errorHandler");
-const authRoute = require("./routes/auth");
-const queryRoute = require("./routes/query");
+const authRoute = require("./routes/authRoute");
+const queryRoute = require("./routes/queryRoute");
+const missionRoute = require("./routes/missionRoute")
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ setInterval(healthCheck, 180000);
 
 app.use("/api/auth", authRoute);
 app.use("/api/query", authMiddleware, queryRoute);
+app.use("/api/mission", authMiddleware, missionRoute);
 
 app.use("/", express.static(path.join(__dirname, "uploads")));
 
