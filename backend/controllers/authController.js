@@ -4,9 +4,7 @@ const User = require("../models/User.js");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto"); // Import crypto for generating tokens
-const dotenv = require("dotenv");
-
-dotenv.config();
+require("dotenv").config();
 
 const pool = require("../config/db.js");
 const frontend_url = process.env.FRONTEND_URL;
@@ -167,7 +165,9 @@ async function Login(req, res) {
       });
     }
 
-    const token = signToken(user.rows[0].id);
+    const token = jwt.sign(user.rows[0], process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_TIMEOUT,
+    });
     const { password: _, ...user_data } = user.rows[0];
 
     res.status(200).json({

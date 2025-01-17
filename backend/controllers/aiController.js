@@ -70,27 +70,32 @@ const createAudioFileFromText = async (text) => {
 };
 
 async function GenerateVoiceAnswer(req, res) {
+  // Check if req.body.query is not empty
+  if (!req.body.query || req.body.query.trim() === "") {
+    return res.status(400).json({ error: "Query cannot be empty." });
+  }
+
   const customerQuery = req.body.query;
+
   try {
     const fileContent = await getFileContent(sourceFile);
+
     // Step 1: Send the customer's query to OpenAI
     const openAIResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: fileContent },
         {
           role: "system",
-          content: "Answer the questions based on above content also",
+          content: "Don't exceed 3 sentences",
         },
         { role: "user", content: customerQuery },
       ],
     });
 
     const botResponse = openAIResponse.choices[0].message.content;
-    console.log("botResponse :>> ", botResponse);
 
     const { fileName, duration } = await createAudioFileFromText(botResponse);
-    console.log("fileName, duration :>> ", fileName, duration);
 
     // Step 3: Send the audio result back to the frontend
     res.json({
@@ -105,5 +110,6 @@ async function GenerateVoiceAnswer(req, res) {
       .json({ error: "An error occurred while processing the request." });
   }
 }
+
 
 module.exports = { GenerateVoiceAnswer };

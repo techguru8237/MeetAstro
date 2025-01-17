@@ -9,7 +9,8 @@ const path = require("path");
 const dotenv = require("dotenv");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
-// const { authMiddleware } = require("./middleware/authenticate");
+const { authMiddleware } = require("./middleware/authenticate");
+const { errorHandler } = require("./middleware/errorHandler");
 const authRoute = require("./routes/auth");
 const queryRoute = require("./routes/query");
 
@@ -58,7 +59,7 @@ app.use(
   })
 );
 app.use(morgan("combined"));
-
+app.use(errorHandler);
 // Health check route
 app.get("/api/health", (req, res) => {
   res.status(200).json("Server is running correctly!");
@@ -70,7 +71,7 @@ const healthCheck = async () => {
     const response = await axios.get(`${base_url}/api/health`);
     console.log(`Health check response: ${response.data}`);
   } catch (error) {
-    console.error('Health check failed:', error.message);
+    console.error("Health check failed:", error.message);
   }
 };
 
@@ -78,10 +79,7 @@ const healthCheck = async () => {
 setInterval(healthCheck, 180000);
 
 app.use("/api/auth", authRoute);
-app.use("/api/query", queryRoute);
-
-// Serve static files from the uploads directory
-// Get the current directory name
+app.use("/api/query", authMiddleware, queryRoute);
 
 app.use("/", express.static(path.join(__dirname, "uploads")));
 
