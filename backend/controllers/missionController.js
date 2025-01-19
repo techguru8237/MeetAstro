@@ -1,9 +1,10 @@
 const pool = require("../config/db.js");
 const moment = require("moment-timezone");
-const levelStandard = require('../data/level.json')
+const levelStandard = require("../data/level.json");
 const chestOneRewards = require("../data/chest1.json");
 const chestTwoRewards = require("../data/chest2.json");
 const chestThreeRewards = require("../data/chest3.json");
+const levelForMissionList = require("../data/levelForChest.json");
 
 const getRandomBetween = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -79,7 +80,11 @@ const getRewards = (user, mission) => {
 
 const getMissions = async (req, res) => {
   try {
-    const localTime = moment.tz("Asia/Tokyo").format(); // Get current time in Tokyo
+    // Get the user's local timezone
+    const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Get current time in the user's local timezone
+    const localTime = moment.tz(localTimezone).format();
 
     const missions = await pool.query(
       "SELECT * FROM missions WHERE user_id = $1 AND able_to_open_chest_at > $2",
@@ -102,7 +107,10 @@ const getMissions = async (req, res) => {
 
 const startMission = async (req, res) => {
   try {
-    const localTime = moment.tz("Asia/Tokyo").format(); // Get current time in Tokyo
+    const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    // Get current time in the user's local timezone
+    const localTime = moment.tz(localTimezone).format();
 
     const openedMission = await pool.query(
       "SELECT * FROM missions WHERE user_id = $1 AND end_at > $2",
@@ -110,7 +118,7 @@ const startMission = async (req, res) => {
     );
     if (openedMission.rows.length > 0) {
       return res.status(400).json({
-        message:
+        error:
           "There is an opened mission. Please try again after Astro returns.",
       });
     }
@@ -120,15 +128,15 @@ const startMission = async (req, res) => {
     if (!missionType) {
       return res
         .status(400)
-        .json({ message: "The type of mission has to be defined." });
+        .json({ error: "The type of mission has to be defined." });
     } else if (missionType > 3) {
       return res
         .status(400)
-        .json({ message: "The type of mission has to be less than 4" });
+        .json({ error: "The type of mission has to be less than 4" });
     }
 
     // Fetch user data
-    const user = await pool.query("SELECT * FROM users WHERE id=$1", [
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [
       req.user.id,
     ]);
 
@@ -140,10 +148,21 @@ const startMission = async (req, res) => {
       });
     }
 
+    const requiredLevel = levelForMissionList.find(
+      (item) => item.missionType == missionType
+    );
+
+    if (user.rows[0].level < requiredLevel.min_level) {
+      return res.status(400).json({
+        status: "failed",
+        message: `You can try this mission after ${requiredLevel.min_level} level.`,
+      });
+    }
+
     const startAt = new Date(); // This is in local time
     const endAt = new Date(startAt.getTime() + 3 * 60000); // 3 minutes later
 
-    const isGetChest = Math.random() < 1; // Ensure you're accessing the correct user data
+    const isGetChest = Math.random() < user.rows[0].windchance / 100; // Ensure you're accessing the correct user data
 
     if (isGetChest) {
       const { chestNumber, duration, credit } = getChestInfo(missionType);
@@ -177,7 +196,7 @@ const startMission = async (req, res) => {
       // Insert new mission into the database
       const newMission = await pool.query(
         "INSERT INTO missions (user_id, start_at, end_at, mission_type, chest_number) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-        [req.user.id, startAt, endAt, missionType, chestNumber]
+        [req.user.id, startAt, endAt, missionType, 0]
       );
 
       return res.status(201).json({
@@ -191,6 +210,33 @@ const startMission = async (req, res) => {
       .status(500)
       .json({ error: "An error occurred while starting the mission." });
   }
+};
+
+const bringBackAstro = async (req, res) => {
+  try {
+    const missionId = parseInt(req.body.missionId);
+
+    if (!missionId) {
+      return res.status(400).json({ error: "missionId needed." });
+    }
+
+    const missionResult = await pool.query(
+      "SELECT * FROM missions WHERE id = $1",
+      [missionId]
+    );
+
+    if (missionResult.rowCount === 0) {
+      return res.status(404).json({ error: "Mission not found" });
+    }
+
+    const updatedUser = await pool.query(
+      "UPDATE missions SET end_at = NOW() WHERE id = $1 RETURNING *",
+      [missionId]
+    );
+    console.log("updatedUser :>> ", updatedUser);
+
+    res.status(200).json(updatedUser.rows[0]);
+  } catch (error) {}
 };
 
 const openChest = async (req, res) => {
@@ -234,6 +280,7 @@ const openChest = async (req, res) => {
 
     // Get rewards based on user and mission
     const { credit, gold, xp, diamond } = getRewards(user, mission);
+
     const currentLevelInfo = levelStandard.find(
       (item) => item.level === user.level
     );
@@ -283,7 +330,14 @@ const openChest = async (req, res) => {
 
 const openChestByDiamond = async (req, res) => {
   try {
-    const { missionId, diamondAmount } = req.body;
+    const missionId = parseInt(req.body.missionId);
+    const diamondAmount = parseInt(req.body.diamondAmount);
+
+    if (!missionId || !diamondAmount) {
+      return res
+        .status(400)
+        .json({ error: "missionId and diamondAmount must be included." });
+    }
 
     // Fetch the mission based on the provided ID
     const missionResult = await pool.query(
@@ -298,11 +352,27 @@ const openChestByDiamond = async (req, res) => {
 
     const mission = missionResult.rows[0];
 
-    // Check if the chest has already been opened
+    if (mission.chest_number == 0) {
+      return res.status(400).json({ error: "There is no chest" });
+    }
+
     if (mission.opened_chest) {
+      // Check if the chest has already been opened
       return res
         .status(400)
         .json({ error: "You have already opened this chest" });
+    }
+
+    // require 6 diamonds per hour
+    const requiredDiamonds =
+      Math.floor(
+        (new Date(mission.able_to_open_chest_at) - new Date()) / (1000 * 3600)
+      ) * 6;
+
+    if (diamondAmount < requiredDiamonds) {
+      return res.status(400).json({
+        error: `You need ${requiredDiamonds} diamonds to open the chest now.`,
+      });
     }
 
     const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [
@@ -316,9 +386,6 @@ const openChestByDiamond = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // Get rewards based on user and mission
-    const { credit, gold, xp, diamond } = getRewards(user, mission);
-
     // Check if the user has enough diamonds
     if (user.diamond < diamondAmount) {
       return res
@@ -326,10 +393,44 @@ const openChestByDiamond = async (req, res) => {
         .json({ error: "You need more diamonds to open this chest." });
     }
 
+    // Get rewards based on user and mission
+    const { credit, gold, xp, diamond } = getRewards(user, mission);
+
+    const currentLevelInfo = levelStandard.find(
+      (item) => item.level === user.level
+    );
+
+    // Calculate new XP
+    const newXP = user.xp + xp;
+    let increasedLevel = 0;
+
+    // Check if the user has leveled up
+    if (newXP >= currentLevelInfo.total_xp) {
+      const nextLevelInfo = levelStandard.find(
+        (item, index) =>
+          newXP > item.total_xp &&
+          (index + 1 < levelStandard.length
+            ? newXP < levelStandard[index + 1].total_xp
+            : true)
+      );
+
+      if (nextLevelInfo) {
+        increasedLevel = nextLevelInfo.level - user.level; // Calculate level increase
+      }
+    }
+
     // Update user's info
     const updatedUser = await pool.query(
-      "UPDATE users SET credit = credit + $1, gold = gold + $2, xp = xp + $3, diamond = diamond - $4 WHERE id = $5 RETURNING *",
-      [credit, gold, xp, diamondAmount, user.id]
+      "UPDATE users SET credit = credit + $1, gold = gold + $2, xp = $3, diamond = diamond + $4 - $5, level = $6 WHERE id = $7 RETURNING *",
+      [
+        credit,
+        gold,
+        newXP,
+        diamond,
+        diamondAmount,
+        user.level + increasedLevel,
+        user.id,
+      ]
     );
 
     // Update the mission and return the updated row
@@ -339,9 +440,11 @@ const openChestByDiamond = async (req, res) => {
     );
 
     // Respond with the updated mission and user
-    return res.status(200).json({
+    res.status(200).json({
       user: updatedUser.rows[0],
       mission: updatedMission.rows[0],
+      levelIncreased: increasedLevel > 0, // Return whether the level has increased
+      newLevel: user.level + increasedLevel, // Return the new level
     });
   } catch (error) {
     console.error("Error opening chest by diamond: ", error);
@@ -349,4 +452,10 @@ const openChestByDiamond = async (req, res) => {
   }
 };
 
-module.exports = { getMissions, startMission, openChest, openChestByDiamond };
+module.exports = {
+  getMissions,
+  startMission,
+  bringBackAstro,
+  openChest,
+  openChestByDiamond,
+};

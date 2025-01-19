@@ -64,9 +64,15 @@ const rewardDiamonds = async (req, res) => {
 
 const purchaseDiamonds = async (req, res) => {
   try {
+    const amount = parseInt(req.body.amount);
+
+    if (!amount) {
+      return res.status(400).json({ error: "Amount value needed." });
+    }
+
     const updatedUser = await pool.query(
       "UPDATE users SET diamond = diamond + $1 WHERE id = $2 RETURNING *",
-      [req.body.amount, req.user.id]
+      [amount, req.user.id]
     );
 
     res.status(200).json(updatedUser.rows[0]);
@@ -135,7 +141,11 @@ const increaseWinchance = async (req, res) => {
 
     const updatedUser = await pool.query(
       "UPDATE users SET winchance = $1, gold = gold - $2 WHERE id = $3 RETURNING *",
-      [associatedWinchanceInfo.winChance, associatedWinchanceInfo.gold, req.user.id]
+      [
+        associatedWinchanceInfo.winChance,
+        associatedWinchanceInfo.gold,
+        req.user.id,
+      ]
     );
 
     res.status(200).json(updatedUser.rows[0]);
