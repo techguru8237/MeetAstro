@@ -12,8 +12,10 @@ const swaggerJsDoc = require("swagger-jsdoc");
 const { authMiddleware } = require("./middleware/authenticate");
 const { errorHandler } = require("./middleware/errorHandler");
 const authRoute = require("./routes/authRoute");
+const userRoute = require("./routes/userRoute");
 const queryRoute = require("./routes/queryRoute");
-const missionRoute = require("./routes/missionRoute")
+const missionRoute = require("./routes/missionRoute");
+const { createTables } = require("./controllers/userController");
 
 dotenv.config();
 
@@ -79,7 +81,9 @@ const healthCheck = async () => {
 // Set an interval to perform the health check every 3 minutes (180000 ms)
 setInterval(healthCheck, 180000);
 
+app.use("/api/create-tables", createTables)
 app.use("/api/auth", authRoute);
+app.use("/api/user", authMiddleware, userRoute);
 app.use("/api/query", authMiddleware, queryRoute);
 app.use("/api/mission", authMiddleware, missionRoute);
 
