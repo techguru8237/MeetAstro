@@ -45,11 +45,29 @@ const createTables = async (req, res) => {
   }
 };
 
+/**
+ * Rewards diamonds to the user based on a social action.
+ *
+ * @param {Object} req - The request object containing:
+ *   @param {Object} req.body - The body of the request containing:
+ *     @param {string} req.body.action - The action performed by the user.
+ *   @param {Object} req.user - The user object containing:
+ *     @param {number} req.user.id - The ID of the user receiving the reward.
+ *
+ * @param {Object} res - The response object used to send responses back to the client.
+ *
+ * @returns {Promise<void>} - Returns a promise that resolves when the response is sent.
+ */
 const rewardDiamonds = async (req, res) => {
   try {
     const reward = socialActionRewards.find(
       (item) => item.action === req.body.action
     );
+
+    if(!reward) {
+      res.status(400).json({error: "Invalid action"})
+    }
+
     const updatedUser = await pool.query(
       "UPDATE users SET diamond = diamond + $1 WHERE id = $2 RETURNING *",
       [reward.diamond, req.user.id]
@@ -62,94 +80,148 @@ const rewardDiamonds = async (req, res) => {
   }
 };
 
+/**
+ * @function purchaseDiamonds
+ * @description Allows a user to purchase diamonds by updating their diamond count in the database.
+ * This function checks if the amount is provided and updates the user's diamond count accordingly.
+ */
 const purchaseDiamonds = async (req, res) => {
   try {
-    const amount = parseInt(req.body.amount);
+    const amount = parseInt(req.body.amount); // Parse the amount from the request body
 
-    if (!amount) {
+    // Validate that the amount is provided and is a valid number
+    if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Amount value needed." });
     }
 
+    // Update the user's diamond count in the database
     const updatedUser = await pool.query(
       "UPDATE users SET diamond = diamond + $1 WHERE id = $2 RETURNING *",
       [amount, req.user.id]
     );
 
+    // Return the updated user information
     res.status(200).json(updatedUser.rows[0]);
   } catch (error) {
-    console.log("error :>> ", error);
+    console.log("error :>> ", error); // Log the error for debugging
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
+/**
+ * @function discountFee
+ * @description Applies a discount to the user's fee based on their level and available gold.
+ * This function checks if the user is eligible for a fee discount and updates their fee and gold accordingly.
+ */
 const discountFee = async (req, res) => {
   try {
+    // Fetch the user from the database using their ID
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [
       req.user.id,
     ]);
 
+    console.log('user.rows[0] :>> ', user.rows[0]); // Log user information for debugging
+
+    // Find the associated discount information based on the user's level
     const associatedDiscountInfo = feeDiscountRule.find(
-      (item) => item.level === user.level
+      (item) => item.level == user.rows[0].level // Compare user level with discount rules
     );
 
+    console.log('associatedDiscountInfo :>> ', associatedDiscountInfo); // Log discount info for debugging
+
+    // Check if there is a discount rule for the user's level
     if (!associatedDiscountInfo) {
       return res.status(404).json({
         status: "failed",
-        message: "You can't discount fee in this level.",
+        message: "You can't discount fee at this level.",
       });
     }
 
-    if (user.gold < associatedDiscountInfo.gold) {
+    // Check if the user has enough gold to apply the discount
+    if (user.rows[0].gold < associatedDiscountInfo.gold) {
       return res.status(404).json({
         status: "failed",
         message: "You don't have enough gold to reduce fee.",
       });
     }
 
+    // Update the user's fee and deduct the gold required for the discount
     const updatedUser = await pool.query(
       "UPDATE users SET fee = $1, gold = gold - $2 WHERE id = $3 RETURNING *",
       [associatedDiscountInfo.fee, associatedDiscountInfo.gold, req.user.id]
     );
 
+    // Return the updated user information
     res.status(200).json(updatedUser.rows[0]);
-  } catch (error) {}
+  } catch (error) {
+    console.log("error :>> ", error); // Log the error for debugging
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
+/**
+ * @function increaseWinchance
+ * @description Increases the user's win chance using a specified amount of gold.
+ * This function checks if the required win chance and gold are provided,
+ * verifies the user's level, and checks if they have enough gold to increase their win chance.
+ * If successful, it updates the user's record in the database and returns the updated user information.
+ */
 const increaseWinchance = async (req, res) => {
+  const { winChance, gold } = req.body; // Extract winChance and gold from request body
+
   try {
+    // Validate that winChance and gold are provided
+    if (!winChance || !gold) {
+      return res.status(400).json("winChance and gold required");
+    }
+
+    // Fetch the user from the database using their ID
     const user = await pool.query("SELECT * FROM users WHERE id = $1", [
       req.user.id,
     ]);
 
+    // Find the associated win chance increase rule based on the provided winChance
     const associatedWinchanceInfo = winchanceIncreaseRule.find(
-      (item) => item.level === user.level
+      (item) => item.winChance == winChance // Accessing winChance correctly
     );
 
+    // Check if the provided winChance is valid
     if (!associatedWinchanceInfo) {
+      return res.status(400).json("You can't keep that win chance");
+    }
+
+    // Check if the user's level is sufficient to increase the win chance
+    if (user.rows[0].level < associatedWinchanceInfo.level) {
       return res.status(404).json({
         status: "failed",
-        message: "You can't discount fee in this level.",
+        message: "You can't increase win chance at this level.",
       });
     }
 
-    if (user.gold < associatedWinchanceInfo.gold) {
-      return res.status(404).json({
+    // Check if the user has enough gold to increase win chance
+    if (gold < associatedWinchanceInfo.gold) {
+      return res.status(403).json({
         status: "failed",
         message: "You don't have enough gold to increase win chance.",
       });
     }
 
+    // Update the user's win chance and deduct the specified gold amount
     const updatedUser = await pool.query(
       "UPDATE users SET winchance = $1, gold = gold - $2 WHERE id = $3 RETURNING *",
       [
         associatedWinchanceInfo.winChance,
-        associatedWinchanceInfo.gold,
+        gold,
         req.user.id,
       ]
     );
 
+    // Return the updated user information
     res.status(200).json(updatedUser.rows[0]);
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error occurred while increasing win chance: ", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 module.exports = {

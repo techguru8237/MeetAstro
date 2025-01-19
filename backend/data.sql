@@ -4,7 +4,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     level INT DEFAULT 1 CHECK (level >= 1 AND level <= 60),
     xp INT DEFAULT 0,
-    windchance INT DEFAULT 80,
+    winchance INT DEFAULT 80,
     fee FLOAT DEFAULT 1.0,
     gold INT DEFAULT 0,
     diamond INT DEFAULT 0,

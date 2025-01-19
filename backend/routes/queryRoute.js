@@ -48,8 +48,6 @@ const router = express.Router();
  *       500:
  *         description: Error occurred
  */
-
-// generate voice answer route -- POST request
 router.post("/generate-voice-answer", validate, GenerateVoiceAnswer);
 
 module.exports = router;
