@@ -6,43 +6,89 @@ const chestTwoRewards = require("../data/chest2.json");
 const chestThreeRewards = require("../data/chest3.json");
 const levelForMissionList = require("../data/levelForChest.json");
 
+/**
+ * Generates a random integer between the specified minimum and maximum values.
+ *
+ * @param {number} min - The minimum value (inclusive).
+ * @param {number} max - The maximum value (inclusive).
+ * @returns {number} A random integer between min and max.
+ */
 const getRandomBetween = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-const getChestInfo = (missionType) => {
-  let chestNumber = 0;
-  let duration = 0;
-  let credit = 0;
+/**
+ * Retrieves information about a chest based on the mission type.
+ *
+ * @param {number} missionType - The type of mission (1, 2, or other).
+ *   - 1: Basic mission with lower rewards.
+ *   - 2: Intermediate mission with moderate rewards.
+ *   - Other: Advanced mission with higher rewards.
+ *
+ * @returns {Object} An object containing:
+ *   - chestNumber: The number of chests awarded.
+ *   - duration: The duration of the mission in hours.
+ *   - credit: The credit earned from the mission.
+ */
 
+/**
+ * Retrieves information about a chest based on the mission type.
+ *
+ * @param {number} missionType - The type of mission (1, 2, or other).
+ *   - 1: Basic mission with lower rewards.
+ *   - 2: Intermediate mission with moderate rewards.
+ *   - Other: Advanced mission with higher rewards.
+ *
+ * @returns {Object} An object containing:
+ *   - chestNumber: The number of chests awarded.
+ *   - duration: The duration of the mission in hours.
+ *   - credit: The credit earned from the mission.
+ */
+const getChestInfo = (missionType) => {
+  let chestNumber = 0; // Number of chests to be awarded
+  let duration = 0; // Duration of the mission
+  let credit = 0; // Credit earned from the mission
+
+  // Generate a random value between 0 and 1
   const randomValue = Math.random();
 
+  // Determine chest information based on the mission type
   if (missionType === 1) {
+    // For mission type 1
     if (randomValue <= 0.8) {
-      chestNumber = 1;
-    } else if (randomValue > 0.8 && randomValue <= 0.95) {
-      chestNumber = 2;
-    } else chestNumber = 3;
-    duration = 3;
-    credit = 10;
+      chestNumber = 1; // 80% chance to get 1 chest
+    } else if (randomValue <= 0.95) {
+      chestNumber = 2; // 15% chance to get 2 chests
+    } else {
+      chestNumber = 3; // 5% chance to get 3 chests
+    }
+    duration = 3; // Duration is 3 hours
+    credit = 10; // Credit earned is 10
   } else if (missionType === 2) {
+    // For mission type 2
     if (randomValue <= 0.7) {
-      chestNumber = 2;
-    } else if (randomValue > 0.7 && randomValue <= 0.85) {
-      chestNumber = 1;
-    } else chestNumber = 1;
-    duration = 8;
-    credit = 30;
+      chestNumber = 2; // 70% chance to get 2 chests
+    } else if (randomValue <= 0.85) {
+      chestNumber = 1; // 15% chance to get 1 chest
+    } else {
+      chestNumber = 1; // 15% chance to get 1 chest (redundant condition)
+    }
+    duration = 8; // Duration is 8 hours
+    credit = 30; // Credit earned is 30
   } else {
+    // For any other mission type
     if (randomValue <= 0.8) {
-      chestNumber = 3;
-    } else if (randomValue > 0.8 && randomValue <= 0.95) {
-      chestNumber = 2;
-    } else chestNumber = 1;
-    duration = 12;
-    credit = 50;
+      chestNumber = 3; // 80% chance to get 3 chests
+    } else if (randomValue <= 0.95) {
+      chestNumber = 2; // 15% chance to get 2 chests
+    } else {
+      chestNumber = 1; // 5% chance to get 1 chest
+    }
+    duration = 12; // Duration is 12 hours
+    credit = 50; // Credit earned is 50
   }
 
+  // Return the chest information as an object
   return { chestNumber, duration, credit };
 };
 
@@ -281,7 +327,7 @@ const bringBackAstro = async (req, res) => {
 
 /**
  * Opens a chest for a user based on the mission ID.
- * 
+ *
  * @param {Object} req - The request object containing missionId in the body.
  * @param {Object} res - The response object.
  * @returns {Object} - Returns user and mission details along with rewards.
@@ -318,7 +364,9 @@ const openChest = async (req, res) => {
 
     // Check if the chest has already been opened
     if (mission.opened_chest) {
-      return res.status(400).json({ error: "You have already opened this chest" });
+      return res
+        .status(400)
+        .json({ error: "You have already opened this chest" });
     }
 
     // Query to find the user by their ID
@@ -387,7 +435,7 @@ const openChest = async (req, res) => {
 
 /**
  * Opens a chest for a user based on the mission ID and diamond amount.
- * 
+ *
  * @param {Object} req - The request object containing missionId and diamondAmount in the body.
  * @param {Object} res - The response object.
  * @returns {Object} - Returns user and mission details along with rewards.
@@ -399,11 +447,16 @@ const openChestByDiamond = async (req, res) => {
 
     // Validate input parameters
     if (!missionId || !diamondAmount) {
-      return res.status(400).json({ error: "missionId and diamondAmount must be included." });
+      return res
+        .status(400)
+        .json({ error: "missionId and diamondAmount must be included." });
     }
 
     // Fetch the mission based on the provided ID
-    const missionResult = await pool.query("SELECT * FROM missions WHERE id = $1", [missionId]);
+    const missionResult = await pool.query(
+      "SELECT * FROM missions WHERE id = $1",
+      [missionId]
+    );
 
     // Check if the mission exists
     if (missionResult.rowCount === 0) {
@@ -419,12 +472,16 @@ const openChestByDiamond = async (req, res) => {
 
     // Check if the chest has already been opened
     if (mission.opened_chest) {
-      return res.status(400).json({ error: "You have already opened this chest" });
+      return res
+        .status(400)
+        .json({ error: "You have already opened this chest" });
     }
 
     // Calculate required diamonds based on the time until the chest can be opened
     const requiredDiamonds =
-      Math.floor((new Date(mission.able_to_open_chest_at) - new Date()) / (1000 * 3600)) * 6;
+      Math.floor(
+        (new Date(mission.able_to_open_chest_at) - new Date()) / (1000 * 3600)
+      ) * 6;
 
     // Validate diamond amount
     if (diamondAmount < requiredDiamonds) {
@@ -434,7 +491,9 @@ const openChestByDiamond = async (req, res) => {
     }
 
     // Fetch user information
-    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [req.user.id]);
+    const userResult = await pool.query("SELECT * FROM users WHERE id = $1", [
+      req.user.id,
+    ]);
 
     // Check if user exists
     if (userResult.rowCount === 0) {
@@ -445,13 +504,17 @@ const openChestByDiamond = async (req, res) => {
 
     // Check if the user has enough diamonds
     if (user.diamond < diamondAmount) {
-      return res.status(400).json({ error: "You need more diamonds to open this chest." });
+      return res
+        .status(400)
+        .json({ error: "You need more diamonds to open this chest." });
     }
 
     // Get rewards based on user and mission
     const { credit, gold, xp, diamond } = getRewards(user, mission);
 
-    const currentLevelInfo = levelStandard.find((item) => item.level === user.level);
+    const currentLevelInfo = levelStandard.find(
+      (item) => item.level === user.level
+    );
 
     // Calculate new XP
     const newXP = user.xp + xp;
@@ -462,7 +525,9 @@ const openChestByDiamond = async (req, res) => {
       const nextLevelInfo = levelStandard.find(
         (item, index) =>
           newXP > item.total_xp &&
-          (index + 1 < levelStandard.length ? newXP < levelStandard[index + 1].total_xp : true)
+          (index + 1 < levelStandard.length
+            ? newXP < levelStandard[index + 1].total_xp
+            : true)
       );
 
       if (nextLevelInfo) {
@@ -473,7 +538,15 @@ const openChestByDiamond = async (req, res) => {
     // Update user's information in the database
     const updatedUser = await pool.query(
       "UPDATE users SET credit = credit + $1, gold = gold + $2, xp = $3, diamond = diamond + $4 - $5, level = $6 WHERE id = $7 RETURNING *",
-      [credit, gold, newXP, diamond, diamondAmount, user.level + increasedLevel, user.id]
+      [
+        credit,
+        gold,
+        newXP,
+        diamond,
+        diamondAmount,
+        user.level + increasedLevel,
+        user.id,
+      ]
     );
 
     // Update the mission details in the database

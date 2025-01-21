@@ -200,7 +200,7 @@ router.post("/back-astro", bringBackAstro);
 
 /**
  * @swagger
- * /api/open-chest:
+ * /api/mission/open-chest:
  *   post:
  *     tags: [Missions]
  *     summary: Open a chest for the authenticated user based on the mission ID
@@ -325,7 +325,7 @@ router.post("/open-chest", openChest);
 
 /**
  * @swagger
- * /api/open-by-diamond:
+ * /api/mission/open-by-diamond:
  *   post:
  *     tags: [Missions]
  *     summary: Open a chest for the authenticated user using diamonds
