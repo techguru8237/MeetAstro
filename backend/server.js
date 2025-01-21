@@ -8,7 +8,6 @@ const path = require("path");
 const dotenv = require("dotenv");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
-const YAML = require("yamljs");
 const { authMiddleware } = require("./middleware/authenticate");
 const { errorHandler } = require("./middleware/errorHandler");
 const authRoute = require("./routes/authRoute");
@@ -28,13 +27,13 @@ const swaggerOptions = {
   swaggerDefinition: {
     openapi: "3.0.0",
     info: {
-      title: "My API",
+      title: "ASTRO BACKEND API",
       version: "1.0.0",
       description: "API documentation using Swagger",
     },
     servers: [
       {
-        url: `http://localhost:${port}`,
+        url: `http://ec2-3-106-223-174.ap-southeast-2.compute.amazonaws.com/:${port}`,
       },
     ],
     components: {
@@ -83,21 +82,6 @@ app.use("/", express.static(path.join(__dirname, "uploads")));
 // app.get("*", (req, res) => {
 //   res.sendFile(path.join(__dirname, "dist", "index.html"));
 // });
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("Something broke!");
-});
-
-// Graceful shutdown
-process.on("SIGINT", () => {
-  console.log("Shutting down gracefully...");
-  mongoose.connection.close(() => {
-    console.log("MongoDB connection closed");
-    process.exit(0);
-  });
-});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
