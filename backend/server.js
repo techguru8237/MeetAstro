@@ -14,7 +14,7 @@ const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
 const queryRoute = require("./routes/queryRoute");
 const missionRoute = require("./routes/missionRoute");
-const { createTables } = require("./controllers/userController");
+const { createTables } = require("./controllers/databaseController");
 
 dotenv.config();
 

@@ -49,7 +49,7 @@ const router = express.Router()
  *                 xp:
  *                   type: integer
  *                   example: 356
- *                 windchance:
+ *                 winchance:
  *                   type: integer
  *                   example: 80
  *                 fee:
@@ -112,7 +112,7 @@ router.post("/reward-diamonds", rewardDiamonds) //Receive diamonds from socialme
  *                 xp:
  *                   type: integer
  *                   example: 356
- *                 windchance:
+ *                 winchance:
  *                   type: integer
  *                   example: 80
  *                 fee:
@@ -165,7 +165,7 @@ router.post("/purchase-diamonds", purchaseDiamonds); //Purchase diamonds
  *                 xp:
  *                   type: integer
  *                   example: 356
- *                 windchance:
+ *                 winchance:
  *                   type: integer
  *                   example: 80
  *                 fee:
@@ -232,7 +232,7 @@ router.post("/discount-fee", discountFee); //Discount fee using gold
  *                 xp:
  *                   type: integer
  *                   example: 356
- *                 windchance:
+ *                 winchance:
  *                   type: integer
  *                   example: 82
  *                 fee:

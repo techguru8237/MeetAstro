@@ -13,9 +13,9 @@ const pool = new Pool({
   database: process.env.PGDATABASE, // Replace with your database name
   password: process.env.PGPASSWORD, // Replace with your password
   port: process.env.PGPORT, // Default PostgreSQL port
-  // ssl: {
-  //   rejectUnauthorized: false, // Accept self-signed certificates
-  // },
+  ssl: {
+    rejectUnauthorized: false, // Accept self-signed certificates
+  },
 });
 
 // Function to connect to the database
