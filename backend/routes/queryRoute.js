@@ -47,40 +47,39 @@ const router = express.Router();
  *       500:
  *         description: Error occurred
  */
-// router.post("/generate-voice-answer", validate, GenerateVoiceAnswer);
-const accessTracker = {}; // In-memory store for tracking access
-router.post("/generate-voice-answer", (req, res) => {
-  const ip = req.headers["x-forwarded-for"] || req.ip;
-  console.log("accessTracker :>> ", accessTracker);
-  console.log("ip :>> ", ip);
+router.post("/generate-voice-answer", GenerateVoiceAnswer);
+// const accessTracker = {}; // In-memory store for tracking access
+// router.post("/generate-voice-answer", (req, res) => {
+//   const ip = req.headers["x-forwarded-for"] || req.ip;
+//   console.log("accessTracker :>> ", accessTracker);
 
-  const currentTime = Date.now();
+//   const currentTime = Date.now();
 
-  // Check if the IP address exists in the tracker
-  if (!accessTracker[ip]) {
-    accessTracker[ip] = { count: 1, firstAccess: currentTime };
-  } else {
-    // Check if the user has exceeded the allowed limit
-    const { count, firstAccess } = accessTracker[ip];
-    const hoursSinceFirstAccess =
-      (currentTime - firstAccess) / (1000 * 60 * 60);
+//   // Check if the IP address exists in the tracker
+//   if (!accessTracker[ip]) {
+//     accessTracker[ip] = { count: 1, firstAccess: currentTime };
+//   } else {
+//     // Check if the user has exceeded the allowed limit
+//     const { count, firstAccess } = accessTracker[ip];
+//     const hoursSinceFirstAccess =
+//       (currentTime - firstAccess) / (1000 * 60 * 60);
 
-    if (hoursSinceFirstAccess < 24) {
-      if (count < 3) {
-        accessTracker[ip].count++;
-      } else {
-        return res
-          .status(429)
-          .json({ message: "Access limit exceeded. Try again tomorrow." });
-      }
-    } else {
-      // Reset the count after 24 hours
-      accessTracker[ip] = { count: 1, firstAccess: currentTime };
-    }
-  }
+//     if (hoursSinceFirstAccess < 24) {
+//       if (count < 3) {
+//         accessTracker[ip].count++;
+//       } else {
+//         return res
+//           .status(429)
+//           .json({ message: "Access limit exceeded. Try again tomorrow." });
+//       }
+//     } else {
+//       // Reset the count after 24 hours
+//       accessTracker[ip] = { count: 1, firstAccess: currentTime };
+//     }
+//   }
 
-  // Proceed with the GenerateVoiceAnswer logic
-  GenerateVoiceAnswer(req, res);
-});
+//   // Proceed with the GenerateVoiceAnswer logic
+//   GenerateVoiceAnswer(req, res);
+// });
 
 module.exports = router;

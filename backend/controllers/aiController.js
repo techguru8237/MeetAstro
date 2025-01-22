@@ -47,7 +47,6 @@ const createAudioFileFromText = async (text) => {
         model_id: "eleven_multilingual_v2",
       });
 
-      console.log("audio :>> ", audio);
       const fileName = `uploads/Answer_${Date.now()}.mp3`; // Save to public folder
       const fileStream = createWriteStream(fileName);
       audio.pipe(fileStream);
