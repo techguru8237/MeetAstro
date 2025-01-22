@@ -46,6 +46,7 @@ app.use(errorHandler);
 
 // Create the /check-server route
 app.get("/check-server", (req, res) => {
+  console.log("Server is running!");
   res.status(200).send("Server is running");
 });
 
