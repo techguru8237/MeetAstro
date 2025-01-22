@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
-const { promisify } = require("util");
 require('dotenv').config()
 
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log('req.headers.authorization :>> ', req.headers.authorization);
     // Get the token from the headers
     const token = req.headers.authorization?.split(" ")[1]; // Bearer token
     if (!token) {

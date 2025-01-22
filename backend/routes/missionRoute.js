@@ -1,11 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const {
-  getMissions,
+  getCurrentMissions,
   startMission,
   bringBackAstro,
   openChest,
   openChestByDiamond,
+  leaderBoard,
 } = require("../controllers/missionController");
 
 /**
@@ -17,10 +18,12 @@ const {
 
 /**
  * @swagger
- * /api/missions:
+ * /api/mission:
  *   get:
  *     tags: [Missions]
- *     summary: Retrieve missions for the authenticated user
+ *     summary: Search for the current mission, which is a chest that is not open to authenticated users.
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of missions available for the user
@@ -60,7 +63,84 @@ const {
  *       500:
  *         description: Internal Server Error
  */
-router.get("/", getMissions);
+router.get("/", getCurrentMissions);
+
+/**
+ * @swagger
+ * /api/mission/leaderboard:
+ *   get:
+ *     tags: [Missions]
+ *     summary: Retrieve the leaderboard for users
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         description: Number of results to return
+ *         schema:
+ *           type: integer
+ *           example: 100
+ *       - name: offset
+ *         in: query
+ *         required: false
+ *         description: Offset for pagination
+ *         schema:
+ *           type: integer
+ *           example: 0
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved leaderboard
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 leaderboard:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       username:
+ *                         type: string
+ *                         example: "playerOne"
+ *                       level:
+ *                         type: integer
+ *                         example: 15
+ *                       xp:
+ *                         type: integer
+ *                         example: 1200
+ *                       gold:
+ *                         type: integer
+ *                         example: 5000
+ *                       diamond:
+ *                         type: integer
+ *                         example: 150
+ *       400:
+ *         description: Bad request, e.g., invalid query parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid query parameters"
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal Server Error"
+ */
+router.get("/leaderboard", leaderBoard);
 
 /**
  * @swagger
@@ -69,7 +149,7 @@ router.get("/", getMissions);
  *     tags: [Missions]
  *     summary: Start a new mission for the authenticated user
  *     security:
- *       - bearerAuth: [] 
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -140,7 +220,7 @@ router.post("/start", startMission);
  *     tags: [Missions]
  *     summary: End a mission early by bringing back Astro
  *     security:
- *       - bearerAuth: [] 
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -205,7 +285,7 @@ router.post("/back-astro", bringBackAstro);
  *     tags: [Missions]
  *     summary: Open a chest for the authenticated user based on the mission ID
  *     security:
- *       - bearerAuth: [] 
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -330,7 +410,7 @@ router.post("/open-chest", openChest);
  *     tags: [Missions]
  *     summary: Open a chest for the authenticated user using diamonds
  *     security:
- *       - bearerAuth: [] 
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:

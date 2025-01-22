@@ -19,6 +19,7 @@ const { createTables } = require("./controllers/userController");
 dotenv.config();
 
 const port = process.env.PORT || 3000;
+const base_url = process.env.BASE_URL
 
 const app = express();
 
@@ -33,7 +34,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://ec2-3-106-223-174.ap-southeast-2.compute.amazonaws.com/:${port}`,
+        url: `${base_url}`,
       },
     ],
     components: {

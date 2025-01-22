@@ -124,7 +124,7 @@ const getRewards = (user, mission) => {
   } catch (error) {}
 };
 
-const getMissions = async (req, res) => {
+const getCurrentMissions = async (req, res) => {
   try {
     // Get the user's local timezone
     const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -134,13 +134,17 @@ const getMissions = async (req, res) => {
 
     // Query to fetch missions that the user can open based on the current time
     const missions = await pool.query(
-      "SELECT * FROM missions WHERE user_id = $1 AND able_to_open_chest_at > $2",
-      [req.user.id, localTime]
+      "SELECT * FROM missions WHERE user_id = $1 AND able_to_open_chest_at > $2 and chest_number > $3",
+      [req.user.id, localTime, 0]
     );
+
+    console.log("missions.rows :>> ", missions.rows);
 
     // Check if missions exist
     if (missions.rowCount === 0) {
-      return res.status(404).json({ message: "No missions found." });
+      return res
+        .status(404)
+        .json({ message: "There is no missions that has unopened chest." });
     }
 
     // Return the list of missions
@@ -228,7 +232,7 @@ const startMission = async (req, res) => {
     const endAt = new Date(startAt.getTime() + 3 * 60000); // 3 minutes later
 
     // Determine if the user can open a chest based on their wind chance
-    const isGetChest = Math.random() < user.rows[0].windchance / 100;
+    const isGetChest = Math.random() < user.rows[0].winchance / 100;
 
     // Prepare mission data
     if (isGetChest) {
@@ -568,10 +572,28 @@ const openChestByDiamond = async (req, res) => {
   }
 };
 
+const leaderBoard = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 100; // Default limit
+  const offset = parseInt(req.query.offset) || 0; // Default offset
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM users ORDER BY level DESC, xp DESC, gold DESC, diamond DESC LIMIT $1 OFFSET $2",
+      [limit, offset]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
-  getMissions,
+  getCurrentMissions,
   startMission,
   bringBackAstro,
   openChest,
   openChestByDiamond,
+  leaderBoard,
 };
