@@ -1,5 +1,4 @@
 const express = require("express");
-const { ipAddress } = require("@vercel/functions");
 const { GenerateVoiceAnswer } = require("../controllers/aiController.js");
 
 const router = express.Router();
@@ -36,7 +35,7 @@ router.post("/generate-voice-answer", (req, res) => {
       accessTracker[id] = { count: 1, firstAccess: currentTime };
     }
   }
-
+  console.log('accessTracker :>> ', accessTracker);
   // Proceed with the GenerateVoiceAnswer logic
   GenerateVoiceAnswer(req, res);
 });
