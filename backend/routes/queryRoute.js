@@ -15,7 +15,7 @@ router.post("/generate-voice-answer", (req, res) => {
 
   // Get IP address using ipAddress helper
   const ip = ipAddress(fetchRequest);
-  console.log(id, req.headers["x-forwarded-for"]);
+  console.log(ip, req.headers["x-forwarded-for"]);
   console.log("accessTracker :>> ", accessTracker);
 
   const currentTime = Date.now();
