@@ -9,7 +9,7 @@ const accessTracker = {}; // In-memory store for tracking access
 router.post("/generate-voice-answer", (req, res) => {
   const ip = req.ip;
 //   req.headers["x-forwarded-for"] || 
-  console.log(req.ip, req.headers["x-forwarded-for"]);
+  console.log(req.ip, ipAddress(request), req.headers["x-forwarded-for"]);
   console.log("accessTracker :>> ", accessTracker);
 
   const currentTime = Date.now();
