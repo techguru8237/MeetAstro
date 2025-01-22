@@ -8,9 +8,14 @@ const router = express.Router();
 
 const accessTracker = {}; // In-memory store for tracking access
 router.post("/generate-voice-answer", (req, res) => {
-  const ip = req.ip;
   //   req.headers["x-forwarded-for"] ||
-  console.log(req.ip, ipAddress(req), req.headers["x-forwarded-for"]);
+  const fetchRequest = {
+    headers: new Headers(req.headers), // Convert Express headers to Fetch-compatible Headers
+  };
+
+  // Get IP address using ipAddress helper
+  const ip = ipAddress(fetchRequest);
+  console.log(id, req.headers["x-forwarded-for"]);
   console.log("accessTracker :>> ", accessTracker);
 
   const currentTime = Date.now();
