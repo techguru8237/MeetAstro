@@ -20,6 +20,7 @@ const swaggerDocument = require("./swagger/swagger.json");
 dotenv.config();
 
 const port = process.env.PORT || 3000;
+const base_url = process.env.BASE_URL
 
 const app = express();
 
