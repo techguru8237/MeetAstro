@@ -50,7 +50,7 @@ const router = express.Router();
 // router.post("/generate-voice-answer", validate, GenerateVoiceAnswer);
 const accessTracker = {}; // In-memory store for tracking access
 router.post("/generate-voice-answer", (req, res) => {
-  const ip = req.ip; // Get the client's IP address
+  const ip = req.headers["x-forwarded-for"] || req.ip;
   console.log("accessTracker :>> ", accessTracker);
   console.log("ip :>> ", ip);
 
