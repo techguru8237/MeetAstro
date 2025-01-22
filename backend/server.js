@@ -75,7 +75,7 @@ app.use("/api/create-tables", createTables);
 app.use("/api/alter-tables", alterTables);
 app.use("/api/auth", authRoute);
 app.use("/api/user", authMiddleware, userRoute);
-app.use("/api/query", authMiddleware, queryRoute);
+app.use("/api/query", queryRoute);
 app.use("/api/mission", authMiddleware, missionRoute);
 
 app.use("/", express.static(path.join(__dirname, "uploads")));
