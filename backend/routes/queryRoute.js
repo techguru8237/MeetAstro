@@ -8,7 +8,7 @@ const router = express.Router();
 const accessTracker = {}; // In-memory store for tracking access
 router.post("/generate-voice-answer", (req, res) => {
   //   req.headers["x-forwarded-for"] ||
-
+console.log("req ==>> ", req)
   const id = req.headers["x-vercel-id"];
 
   const currentTime = Date.now();
