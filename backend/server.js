@@ -70,6 +70,25 @@ app.use(
 );
 app.use(errorHandler);
 
+// Create the /check-server route
+app.get("/check-server", (req, res) => {
+  console.log("server is running");
+  res.status(200).send("Server is running");
+});
+
+// Function to send request to the /check-server endpoint
+const sendRequestToServer = async () => {
+  try {
+    const response = await axios.get(`${base_url}/check-server`);
+    console.log("Request sent successfully:", response.data);
+  } catch (error) {
+    console.error("Error sending request:", error.message);
+  }
+};
+
+// Set interval to send request every 3 minutes (180000 milliseconds)
+setInterval(sendRequestToServer, 180000);
+
 // routes
 app.use("/api/create-tables", createTables);
 app.use("/api/alter-tables", alterTables);
