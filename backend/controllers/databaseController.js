@@ -57,7 +57,6 @@ const alterTables = async (req, res) => {
     console.error("Error creating tables:", error);
     res.status(500).json({ error: "Failed to create tables." });
   }
-  f;
 };
 
 module.exports = { createTables, alterTables };

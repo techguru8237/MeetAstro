@@ -578,7 +578,7 @@ const leaderBoard = async (req, res) => {
 
   try {
     const result = await pool.query(
-      "SELECT * FROM users ORDER BY level DESC, xp DESC, gold DESC, diamond DESC LIMIT $1 OFFSET $2",
+      "SELECT * FROM users ORDER BY credit DESC LIMIT $1 OFFSET $2",
       [limit, offset]
     );
 

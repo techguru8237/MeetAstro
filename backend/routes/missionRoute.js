@@ -70,7 +70,7 @@ router.get("/", getCurrentMissions);
  * /api/mission/leaderboard:
  *   get:
  *     tags: [Missions]
- *     summary: Retrieve the leaderboard for users
+ *     summary: Retrieve the leaderboard for users (order by crdit)
  *     security:
  *       - bearerAuth: []
  *     parameters:
