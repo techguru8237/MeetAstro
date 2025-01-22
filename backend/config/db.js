@@ -3,20 +3,20 @@ const { Pool } = require("pg");
 require("dotenv").config(); // Load environment variables from .env file
 
 // Create a new pool instance using the DATABASE_URL from environment variables
-// const pool = new Pool({
-//   connectionString: process.env.POSTGRES_URL,
-// });
-
 const pool = new Pool({
-  user: process.env.PGUSER, // Replace with your PostgreSQL username
-  host: process.env.PGHOST, // Host name (default is localhost)
-  database: process.env.PGDATABASE, // Replace with your database name
-  password: process.env.PGPASSWORD, // Replace with your password
-  port: process.env.PGPORT, // Default PostgreSQL port
-  ssl: {
-    rejectUnauthorized: false, // Accept self-signed certificates
-  },
+  connectionString: process.env.POSTGRES_URL,
 });
+
+// const pool = new Pool({
+//   user: process.env.PGUSER, // Replace with your PostgreSQL username
+//   host: process.env.PGHOST, // Host name (default is localhost)
+//   database: process.env.PGDATABASE, // Replace with your database name
+//   password: process.env.PGPASSWORD, // Replace with your password
+//   port: process.env.PGPORT, // Default PostgreSQL port
+//   // ssl: {
+//   //   rejectUnauthorized: false, // Accept self-signed certificates
+//   // },
+// });
 
 // Function to connect to the database
 const connect = async () => {
