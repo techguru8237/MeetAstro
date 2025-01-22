@@ -7,7 +7,6 @@ const helmet = require("helmet");
 const path = require("path");
 const dotenv = require("dotenv");
 const swaggerUi = require("swagger-ui-express");
-const swaggerJsDoc = require("swagger-jsdoc");
 const { authMiddleware } = require("./middleware/authenticate");
 const { errorHandler } = require("./middleware/errorHandler");
 const authRoute = require("./routes/authRoute");
@@ -15,43 +14,16 @@ const userRoute = require("./routes/userRoute");
 const queryRoute = require("./routes/queryRoute");
 const missionRoute = require("./routes/missionRoute");
 const { createTables, alterTables } = require("./controllers/databaseController");
+const swaggerDocument = require("./swagger/swagger.json");
 
 dotenv.config();
 
 const port = process.env.PORT || 3000;
-const base_url = process.env.BASE_URL
 
 const app = express();
 
 // Swagger definition
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: "3.0.0",
-    info: {
-      title: "ASTRO BACKEND API",
-      version: "1.0.0",
-      description: "API documentation using Swagger",
-    },
-    servers: [
-      {
-        url: `${base_url}`,
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-  },
-  apis: ["./routes/*.js"], // Path to your API docs
-};
-
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Middleware
 app.use(bodyParser.json());
