@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const axios = require('axios')
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
@@ -44,15 +45,13 @@ app.use(errorHandler);
 
 // Create the /check-server route
 app.get("/check-server", (req, res) => {
-  console.log("server is running");
   res.status(200).send("Server is running");
 });
 
 // Function to send request to the /check-server endpoint
 const sendRequestToServer = async () => {
   try {
-    const response = await axios.get(`${base_url}/check-server`);
-    console.log("Request sent successfully:", response.data);
+    await axios.get(`${base_url}/check-server`);
   } catch (error) {
     console.error("Error sending request:", error.message);
   }
