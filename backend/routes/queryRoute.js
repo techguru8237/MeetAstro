@@ -9,28 +9,23 @@ const router = express.Router();
 const accessTracker = {}; // In-memory store for tracking access
 router.post("/generate-voice-answer", (req, res) => {
   //   req.headers["x-forwarded-for"] ||
-  const fetchRequest = {
-    headers: new Headers(req.headers), // Convert Express headers to Fetch-compatible Headers
-  };
 
-  console.log(fetchRequest);
-  // Get IP address using ipAddress helper
-  const ip = ipAddress(fetchRequest);
+  const id = req.headers["x-vercel-id"];
 
   const currentTime = Date.now();
 
   // Check if the IP address exists in the tracker
-  if (!accessTracker[ip]) {
-    accessTracker[ip] = { count: 1, firstAccess: currentTime };
+  if (!accessTracker[id]) {
+    accessTracker[id] = { count: 1, firstAccess: currentTime };
   } else {
     // Check if the user has exceeded the allowed limit
-    const { count, firstAccess } = accessTracker[ip];
+    const { count, firstAccess } = accessTracker[id];
     const hoursSinceFirstAccess =
       (currentTime - firstAccess) / (1000 * 60 * 60);
 
     if (hoursSinceFirstAccess < 24) {
       if (count < 3) {
-        accessTracker[ip].count++;
+        accessTracker[id].count++;
       } else {
         return res
           .status(429)
@@ -38,7 +33,7 @@ router.post("/generate-voice-answer", (req, res) => {
       }
     } else {
       // Reset the count after 24 hours
-      accessTracker[ip] = { count: 1, firstAccess: currentTime };
+      accessTracker[id] = { count: 1, firstAccess: currentTime };
     }
   }
 
