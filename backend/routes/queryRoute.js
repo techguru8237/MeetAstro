@@ -29,7 +29,7 @@ router.post("/generate-voice-answer", (req, res) => {
       } else {
         return res
           .status(429)
-          .json({ message: "Access limit exceeded. Try again tomorrow." });
+          .json({ message: "Uh-oh! You've hit your response limit. 😢 But don't worry – the app will be live soon, and we’ll be able to chat then! 🚀✨Hang tight, friend! 💬💡" });
       }
     } else {
       // Reset the count after 24 hours
