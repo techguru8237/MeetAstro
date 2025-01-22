@@ -14,7 +14,7 @@ const authRoute = require("./routes/authRoute");
 const userRoute = require("./routes/userRoute");
 const queryRoute = require("./routes/queryRoute");
 const missionRoute = require("./routes/missionRoute");
-const { createTables } = require("./controllers/databaseController");
+const { createTables, alterTables } = require("./controllers/databaseController");
 
 dotenv.config();
 
@@ -72,6 +72,7 @@ app.use(errorHandler);
 
 // routes
 app.use("/api/create-tables", createTables);
+app.use("/api/alter-tables", alterTables);
 app.use("/api/auth", authRoute);
 app.use("/api/user", authMiddleware, userRoute);
 app.use("/api/query", authMiddleware, queryRoute);

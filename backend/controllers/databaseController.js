@@ -43,4 +43,21 @@ const createTables = async (req, res) => {
   }
 };
 
-module.exports = { createTables };
+const alterTables = async (req, res) => {
+  try {
+    await pool.query("ALTER TABLE users RENAME COLUMN windchance TO winchance");
+    await pool.query(
+      "ALTER TABLE missions ALTER COLUMN able_to_open_chest_at DROP NOT NULL"
+    );
+
+    res.status(201).json({
+      message: "Tables 'users' and 'missions' altered successfully.",
+    });
+  } catch (error) {
+    console.error("Error creating tables:", error);
+    res.status(500).json({ error: "Failed to create tables." });
+  }
+  f;
+};
+
+module.exports = { createTables, alterTables };
