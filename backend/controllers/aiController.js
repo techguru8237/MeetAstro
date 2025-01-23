@@ -70,16 +70,18 @@ const createAudioFileFromText = async (text) => {
 
 const accessTracker = {}; // In-memory store for tracking access
 
+const MAX_REQUESTS = 3; // Maximum allowed requests in 24 hours
+
 const GenerateVoiceAnswer = async (req, res) => {
   // Check if req.body.query is not empty
   if (!req.body.query || req.body.query.trim() === "") {
     return res.status(400).json({ error: "Query cannot be empty." });
   }
 
-  const ip = req.body.ip
+  const ip = req.body.ip;
 
-  if(!ip) {
-    return res.status(400).json({error: "IP address needed."})
+  if (!ip) {
+    return res.status(400).json({ error: "IP address needed." });
   }
 
   const currentTime = Date.now();
@@ -94,12 +96,13 @@ const GenerateVoiceAnswer = async (req, res) => {
       (currentTime - firstAccess) / (1000 * 60 * 60);
 
     if (hoursSinceFirstAccess < 24) {
-      if (count < 3) {
+      if (count < MAX_REQUESTS) {
         accessTracker[ip].count++;
       } else {
         return res.status(429).json({
           message:
             "Uh-oh! You've hit your response limit. 😢 But don't worry - the app will be live soon, and we'll be able to chat then! 🚀✨Hang tight, friend! 💬💡",
+          remaining: 0, // No remaining requests
         });
       }
     } else {
@@ -108,7 +111,9 @@ const GenerateVoiceAnswer = async (req, res) => {
     }
   }
 
-  console.log('accessTracker :>> ', accessTracker);
+  const remainingRequests = MAX_REQUESTS - accessTracker[ip].count; // Calculate remaining requests
+
+  console.log("accessTracker :>> ", accessTracker);
 
   const query = req.body.query;
 
@@ -120,10 +125,7 @@ const GenerateVoiceAnswer = async (req, res) => {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: fileContent },
-        {
-          role: "system",
-          content: "Don't exceed 25 words",
-        },
+        { role: "system", content: "Don't exceed 25 words" },
         { role: "user", content: query },
       ],
     });
@@ -137,6 +139,7 @@ const GenerateVoiceAnswer = async (req, res) => {
       botResponse,
       audioUrl: `${base_url}/${fileName.replace("uploads/", "")}`, // Adjust based on the actual response structure
       audioDuration: duration,
+      remaining: remainingRequests, // Return remaining requests
     });
   } catch (error) {
     console.error("Error:", error);
