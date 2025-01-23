@@ -97,7 +97,7 @@ const GenerateVoiceAnswer = async (req, res) => {
     const { fileName, duration } = await createAudioFileFromText(botResponse);
 
     // Step 3: Send the audio result back to the frontend
-    res.json({
+    res.status(200).json({
       botResponse,
       audioUrl: `${base_url}/${fileName.replace("uploads/", "")}`, // Adjust based on the actual response structure
       audioDuration: duration,
