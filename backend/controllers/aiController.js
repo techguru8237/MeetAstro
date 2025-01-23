@@ -101,9 +101,11 @@ const GenerateVoiceAnswer = async (req, res) => {
         accessTracker[ip].count++;
       } else {
         return res.status(429).json({
-          message:
+          botResponse:
             "Uh-oh! You've hit your response limit. 😢 But don't worry - the app will be live soon, and we'll be able to chat then! 🚀✨Hang tight, friend! 💬💡",
           remaining: 0, // No remaining requests
+          audioUrl: `${base_url}/rate_limit_answer.mp3`, // Adjust based on the actual response structure
+          audioDuration: 8,
         });
       }
     } else {
@@ -113,8 +115,6 @@ const GenerateVoiceAnswer = async (req, res) => {
   }
 
   const remainingRequests = MAX_REQUESTS - accessTracker[ip].count; // Calculate remaining requests
-
-  console.log("accessTracker :>> ", accessTracker);
 
   const query = req.body.query;
 
@@ -141,13 +141,13 @@ const GenerateVoiceAnswer = async (req, res) => {
       }
     );
 
-    const newContent = `Role: You create the response for the robot of crypto project MeetAstroAI. 
-    Context: A user asked the robot this question: ${query} 
-    Relevant knowledge base: ${fileContent}, ${perplexityResponse.data.choices[0].message.content} 
-    Task: Form the response robot will voice out and send back to user. Make it concise and to-the-point. The response must also specify the reason using numbers and measurable metrics why the specific response is provided in form introducing it after the word 'because'. 
-    Requirement to the response: Not longer than 350 characters. 
-    Language of the response: en 
-    Mood of the response: fun, light-hearted, cute, clumsy, intelligent. 
+    const newContent = `Role: You create the response for the robot of crypto project MeetAstroAI.
+    Context: A user asked the robot this question: ${query}
+    Relevant knowledge base: ${fileContent}, ${perplexityResponse.data.choices[0].message.content}
+    Task: Form the response robot will voice out and send back to user. Make it concise and to-the-point. The response must also specify the reason using numbers and measurable metrics why the specific response is provided in form introducing it after the word 'because'.
+    Requirement to the response: Not longer than 350 characters.
+    Language of the response: en
+    Mood of the response: fun, light-hearted, cute, clumsy, intelligent.
     Return nothing but the text of the response.`;
 
     const openAIResponse = await openai.chat.completions.create({
@@ -180,7 +180,6 @@ const GenerateVoiceAnswer = async (req, res) => {
         },
       ],
     });
-
 
     const botResponse = minimizedOpenAIResponse.choices[0].message.content;
 
