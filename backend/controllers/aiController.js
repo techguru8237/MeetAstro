@@ -1,4 +1,5 @@
 const OpenAI = require("openai");
+const axios = require("axios");
 const { ElevenLabsClient } = require("elevenlabs");
 const fs = require("fs");
 const { createWriteStream } = require("fs");
@@ -120,21 +121,71 @@ const GenerateVoiceAnswer = async (req, res) => {
   try {
     const fileContent = await getFileContent(sourceFile);
 
-    // Step 1: Send the customer's query to OpenAI
+    const perplexityOptions = {
+      model: "llama-3.1-sonar-huge-128k-online",
+      messages: [
+        { role: "system", content: "Be precise and concise." },
+        { role: "user", content: query },
+      ],
+      temperature: 0.7,
+    };
+
+    const perplexityResponse = await axios.post(
+      "https://api.perplexity.ai/chat/completions",
+      perplexityOptions,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PERPLEXITY_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const newContent = `Role: You create the response for the robot of crypto project MeetAstroAI. 
+    Context: A user asked the robot this question: ${query} 
+    Relevant knowledge base: ${fileContent}, ${perplexityResponse.data.choices[0].message.content} 
+    Task: Form the response robot will voice out and send back to user. Make it concise and to-the-point. The response must also specify the reason using numbers and measurable metrics why the specific response is provided in form introducing it after the word 'because'. 
+    Requirement to the response: Not longer than 350 characters. 
+    Language of the response: en 
+    Mood of the response: fun, light-hearted, cute, clumsy, intelligent. 
+    Return nothing but the text of the response.`;
+
     const openAIResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: newContent,
+        },
+      ],
+      max_completion_tokens: 2048,
+    });
+
+    const shortenOpenAIResponse = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: fileContent },
-        { role: "system", content: "Don't exceed 25 words" },
-        { role: "user", content: query },
+        {
+          role: "user",
+          content: `Shorten this response to post on X: ${openAIResponse.choices[0].message.content}`,
+        },
+      ]
+    });
+
+    const minimizedOpenAIResponse = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: `Clean up this response from all emojis, hashtags and other symbols to be eligible for voicing out: ${shortenOpenAIResponse.choices[0].message.content}`,
+        },
       ],
     });
 
-    const botResponse = openAIResponse.choices[0].message.content;
+
+    const botResponse = minimizedOpenAIResponse.choices[0].message.content;
 
     const { fileName, duration } = await createAudioFileFromText(botResponse);
 
-    // Step 3: Send the audio result back to the frontend
     res.status(200).json({
       botResponse,
       audioUrl: `${base_url}/${fileName.replace("uploads/", "")}`, // Adjust based on the actual response structure
