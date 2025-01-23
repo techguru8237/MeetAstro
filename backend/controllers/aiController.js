@@ -36,7 +36,7 @@ const getFileContent = async (filePath) => {
       }
     });
   });
-}
+};
 
 const createAudioFileFromText = async (text) => {
   return new Promise(async (resolve, reject) => {
@@ -68,13 +68,49 @@ const createAudioFileFromText = async (text) => {
   });
 };
 
+const accessTracker = {}; // In-memory store for tracking access
+
 const GenerateVoiceAnswer = async (req, res) => {
   // Check if req.body.query is not empty
   if (!req.body.query || req.body.query.trim() === "") {
     return res.status(400).json({ error: "Query cannot be empty." });
   }
 
-  const customerQuery = req.body.query;
+  const ip = req.body.ip
+
+  if(!ip) {
+    return res.status(400).json({error: "IP address needed."})
+  }
+
+  const currentTime = Date.now();
+
+  // Check if the IP address exists in the tracker
+  if (!accessTracker[ip]) {
+    accessTracker[ip] = { count: 1, firstAccess: currentTime };
+  } else {
+    // Check if the user has exceeded the allowed limit
+    const { count, firstAccess } = accessTracker[ip];
+    const hoursSinceFirstAccess =
+      (currentTime - firstAccess) / (1000 * 60 * 60);
+
+    if (hoursSinceFirstAccess < 24) {
+      if (count < 3) {
+        accessTracker[ip].count++;
+      } else {
+        return res.status(429).json({
+          message:
+            "Uh-oh! You've hit your response limit. 😢 But don't worry - the app will be live soon, and we'll be able to chat then! 🚀✨Hang tight, friend! 💬💡",
+        });
+      }
+    } else {
+      // Reset the count after 24 hours
+      accessTracker[ip] = { count: 1, firstAccess: currentTime };
+    }
+  }
+
+  console.log('accessTracker :>> ', accessTracker);
+
+  const query = req.body.query;
 
   try {
     const fileContent = await getFileContent(sourceFile);
@@ -86,9 +122,9 @@ const GenerateVoiceAnswer = async (req, res) => {
         { role: "system", content: fileContent },
         {
           role: "system",
-          content: "Don't exceed 3 sentences",
+          content: "Don't exceed 25 words",
         },
-        { role: "user", content: customerQuery },
+        { role: "user", content: query },
       ],
     });
 
@@ -108,7 +144,6 @@ const GenerateVoiceAnswer = async (req, res) => {
       .status(500)
       .json({ error: "An error occurred while processing the request." });
   }
-}
-
+};
 
 module.exports = { GenerateVoiceAnswer };
