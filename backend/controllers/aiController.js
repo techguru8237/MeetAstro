@@ -100,7 +100,7 @@ const GenerateVoiceAnswer = async (req, res) => {
       if (count < MAX_REQUESTS) {
         accessTracker[ip].count++;
       } else {
-        return res.status(429).json({
+        return res.status(419).json({
           botResponse:
             "Uh-oh! You've hit your response limit. 😢 But don't worry - the app will be live soon, and we'll be able to chat then! 🚀✨Hang tight, friend! 💬💡",
           remaining: 0, // No remaining requests
