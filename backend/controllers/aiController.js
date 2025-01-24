@@ -178,7 +178,7 @@ const GenerateVoiceAnswer = async (req, res) => {
       messages: [
         {
           role: "user",
-          content: `Clean up this response from all emojis, hashtags and other symbols to be eligible for voicing out: ${shortenOpenAIResponse.choices[0].message.content}`,
+          content: `Clean up this response from all emojis, hashtags and other symbols to be eligible for voicing out such as ', ", ;, :, etc: ${shortenOpenAIResponse.choices[0].message.content}`,
         },
       ],
     });
