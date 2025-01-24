@@ -114,6 +114,8 @@ const GenerateVoiceAnswer = async (req, res) => {
     }
   }
 
+  console.log('accessTracker :>> ', accessTracker);
+
   const remainingRequests = MAX_REQUESTS - accessTracker[ip].count; // Calculate remaining requests
 
   const query = req.body.query;
