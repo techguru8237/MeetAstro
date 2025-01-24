@@ -71,7 +71,7 @@ const createAudioFileFromText = async (text) => {
 
 const accessTracker = {}; // In-memory store for tracking access
 
-const MAX_REQUESTS = 30; // Maximum allowed requests in 24 hours
+const MAX_REQUESTS = 3; // Maximum allowed requests in 24 hours
 
 const GenerateVoiceAnswer = async (req, res) => {
   // Check if req.body.query is not empty
