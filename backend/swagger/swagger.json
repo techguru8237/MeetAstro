@@ -963,9 +963,8 @@
     },
     "/api/query/generate-voice-answer": {
       "post": {
-        "tags": ["Query"],
-        "summary": "Generate voice answer",
-        "description": "Generates a voice answer based on the user's query.",
+        "summary": "Generate a voice response based on user query",
+        "operationId": "generateVoiceAnswer",
         "requestBody": {
           "required": true,
           "content": {
@@ -975,39 +974,105 @@
                 "properties": {
                   "query": {
                     "type": "string",
-                    "example": "What is your name?"
+                    "description": "The user's query for which a voice response is generated."
+                  },
+                  "ip": {
+                    "type": "string",
+                    "description": "The IP address of the user."
+                  }
+                },
+                "required": ["query", "ip"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response with the generated voice answer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "botResponse": {
+                      "type": "string",
+                      "description": "The generated voice response."
+                    },
+                    "audioUrl": {
+                      "type": "string",
+                      "description": "URL to the audio file of the response."
+                    },
+                    "audioDuration": {
+                      "type": "integer",
+                      "description": "Duration of the audio in seconds."
+                    },
+                    "remaining": {
+                      "type": "integer",
+                      "description": "Number of remaining requests for the user."
+                    }
                   }
                 }
               }
             }
           },
-          "responses": {
-            "200": {
-              "description": "Successful response",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "botResponse": {
-                        "type": "string",
-                        "example": "You can call me AI Astro, your personal 3D AI avatar! I bring together AI, gaming, entertainment, and decentralized finance (DeFi) into one awesome experience."
-                      },
-                      "audioUrl": {
-                        "type": "string",
-                        "example": "https://meetastro.onrender.com/Answer_1736973948673.mp3"
-                      },
-                      "audioDuration": {
-                        "type": "string",
-                        "example": "12.772"
-                      }
+          "400": {
+            "description": "Bad Request - Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message describing the issue."
                     }
                   }
                 }
               }
-            },
-            "500": {
-              "description": "Error occurred"
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "botResponse": {
+                      "type": "string",
+                      "description": "Message indicating the rate limit has been reached."
+                    },
+                    "remaining": {
+                      "type": "integer",
+                      "description": "Number of remaining requests (0 in this case)."
+                    },
+                    "audioUrl": {
+                      "type": "string",
+                      "description": "URL to the audio file explaining the rate limit."
+                    },
+                    "audioDuration": {
+                      "type": "integer",
+                      "description": "Duration of the audio in seconds."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An error occurred while processing the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "description": "Error message indicating a server error."
+                    }
+                  }
+                }
+              }
             }
           }
         }
