@@ -96,7 +96,7 @@ const GenerateVoiceAnswer = async (req, res) => {
       (currentTime - firstAccess) / (1000 * 60 * 60);
 
     if (hoursSinceFirstAccess < 24) {
-      if (count < MAX_REQUESTS) {
+      if (count < MAX_REQUESTS || ip === "Unity Game IP") {
         accessTracker[ip].count++;
       } else {
         return res.status(429).json({
@@ -113,9 +113,12 @@ const GenerateVoiceAnswer = async (req, res) => {
     }
   }
 
-  console.log('accessTracker :>> ', accessTracker);
+  console.log("accessTracker :>> ", accessTracker);
 
-  const remainingRequests = MAX_REQUESTS - accessTracker[ip].count; // Calculate remaining requests
+  const remainingRequests =
+    ip === "Unity Game IP"
+      ? 10000 - accessTracker[ip].count
+      : MAX_REQUESTS - accessTracker[ip].count; // Calculate remaining requests
 
   const query = req.body.query;
 
@@ -169,7 +172,7 @@ const GenerateVoiceAnswer = async (req, res) => {
           role: "user",
           content: `Shorten this response to post on X: ${openAIResponse.choices[0].message.content}`,
         },
-      ]
+      ],
     });
 
     const minimizedOpenAIResponse = await openai.chat.completions.create({
@@ -188,9 +191,9 @@ const GenerateVoiceAnswer = async (req, res) => {
 
     res.status(200).json({
       botResponse,
-      audioUrl: `${base_url}/${fileName.replace("uploads/", "")}`, // Adjust based on the actual response structure
+      audioUrl: `${base_url}/${fileName.replace("uploads/", "")}`,
       audioDuration: duration,
-      remaining: remainingRequests, // Return remaining requests
+      remaining: remainingRequests,
     });
   } catch (error) {
     console.error("Error:", error);
